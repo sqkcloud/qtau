@@ -28,4 +28,4 @@ To install QTAU type:
 
 ## Hints
 
-Your default conda environment should contain all QTAU and application dependencies. Activate it, e.g., in the `.bashrc`.oxy
+Your default conda environment should contain all QTAU and application dependencies. Activate it, e.g., in the `.bashrc`

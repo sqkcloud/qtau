@@ -67,8 +67,7 @@ setup(name='QTAU',
       packages=find_packages(),
       # data files for easy_install
       package_data={'': ['*.xml', '*.yaml', '*.properties']},
-      install_requires=['uuid', 'argparse', 'python-hostlist', 'dask', 'distributed', 'pyspark', 'paramiko',
-                        'boto3'],
+      install_requires=['uuid', 'argparse', 'python-hostlist', 'dask', 'distributed', 'pyspark', 'boto3'],
       entry_points={
           'console_scripts': ['pq=commandline.main:main',
                               'qtau=commandline.main:main']

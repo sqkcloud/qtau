@@ -69,9 +69,10 @@ def fit_circuit_to_target():
     # Add to requirements.txt: jax, scipy
     start = time.time()    
 
-    wires = 5
+    wires = 11
     layers = 2
     dev = qml.device('default.qubit', wires=wires)
+    
     @qml.qnode(dev)
     def circuit(parameters):
         parameters = parameters.reshape((layers, wires, 3))

@@ -62,10 +62,9 @@ class Job(object):
         self.logger.debug("Pilot-Job SLURM: Parsing job description: %s" % str(job_description))
 
         self.pilot_compute_description = {}
-        if 'queue' in job_description or job_description['queue'] is not None or job_description['queue'] != "None":
+        if 'queue' in job_description and job_description['queue'] is not None and job_description['queue'] != "None":
             self.pilot_compute_description['queue'] = job_description['queue']
-
-        self.logger.debug("Queue: %s"%self.pilot_compute_description['queue'])
+            self.logger.debug("Queue: %s"%self.pilot_compute_description['queue'])
         
         # Defaults
         self.pilot_compute_description['number_of_nodes'] = 1

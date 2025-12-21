@@ -1,28 +1,20 @@
 from copy import copy
+from datetime import datetime
 import csv
-import logging
+import os
 import subprocess
+import threading
 import time
 import uuid
 
 from distributed import Future
+from dask.distributed import wait
 import ray
 
 from pilot.pilot_enums_exceptions import ExecutionEngine, PilotAPIException
 from pilot.pcs_logger import PilotComputeServiceLogger
 from pilot.plugins.dask_v2 import cluster as dask_cluster_manager
 from pilot.plugins.ray_v2 import cluster as ray_cluster_manager
-
-import os
-from dask.distributed import wait
-from datetime import datetime
-from enum import Enum
-import csv
-import os
-import time
-import uuid
-from datetime import datetime
-import threading
 
 
 METRICS = {
@@ -49,6 +41,8 @@ def run_mpi_task(num_procs, script_path, *args):
     return result.stdout, result.stderr 
 
 SORTED_METRICS_FIELDS = sorted(METRICS.keys())
+# Module-level lock to prevent race conditions when writing metrics
+METRICS_LOCK = threading.Lock()
 
 class PilotComputeBase:
     def __init__(self, execution_engine, working_directory):
@@ -112,17 +106,15 @@ class PilotComputeBase:
                 except Exception as e:
                     task_metrics["status"] = "FAILED"
                     task_metrics["error_msg"] = str(e)
-                    
+                    raise  # Re-raise to propagate the error
+                finally:
+                    task_metrics["completion_time"] = datetime.now()
+                    task_metrics["execution_secs"] = round((time.time() - task_execution_start_time), 4)
 
-                task_metrics["completion_time"] = datetime.now()
-                task_metrics["execution_secs"] = round((time.time() - task_execution_start_time), 4)
-
-                lock = threading.Lock()
-                
-                with lock:
-                    with open(metrics_fn, 'a', newline='') as csvfile:
-                        writer = csv.DictWriter(csvfile, fieldnames=SORTED_METRICS_FIELDS)
-                        writer.writerow(task_metrics)
+                    with METRICS_LOCK:
+                        with open(metrics_fn, 'a', newline='') as csvfile:
+                            writer = csv.DictWriter(csvfile, fieldnames=SORTED_METRICS_FIELDS)
+                            writer.writerow(task_metrics)
 
                 return result             
             

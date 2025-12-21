@@ -1,9 +1,5 @@
 # QTAU
 
-Last Updated: 10/09/2024
-
-# Overview:
-
 QTAU is presented as a Quantum-HPC middleware framework designed to address the challenges of integrating quantum and classical computing resources. It focuses on managing heterogeneous resources, including diverse Quantum Processing Unit (QPU) modalities and various integration types with classical resources, such as accelerators.
  
 Requirements:
@@ -76,3 +72,7 @@ pcs.cancel()
 ## Hints
 
 Your default conda environment should contain all QTAU and application dependencies. Activate it, e.g., in the `.bashrc`
+
+## License
+
+QTAU is released under the Apache 2.0 license. See LICENSE for more details.

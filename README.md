@@ -1,9 +1,5 @@
 # QTAU
 
-Last Updated: 03/03/2024
-
-# Overview:
-
 QTAU is presented as a Quantum-HPC middleware framework designed to address the challenges of integrating quantum and classical computing resources. It focuses on managing heterogeneous resources, including diverse Quantum Processing Unit (QPU) modalities and various integration types with classical resources, such as accelerators.
  
 Requirements:

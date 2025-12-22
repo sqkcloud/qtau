@@ -8,10 +8,10 @@ import uuid
 from distributed import Future
 import ray
 
-from pilot.pilot_enums_exceptions import ExecutionEngine, PilotAPIException
-from pilot.pcs_logger import PilotComputeServiceLogger
-from pilot.plugins.dask_v2 import cluster as dask_cluster_manager
-from pilot.plugins.ray_v2 import cluster as ray_cluster_manager
+from qtau.pilot_enums_exceptions import ExecutionEngine, PilotAPIException
+from qtau.pcs_logger import PilotComputeServiceLogger
+from qtau.plugins.dask_v2 import cluster as dask_cluster_manager
+from qtau.plugins.ray_v2 import cluster as ray_cluster_manager
 
 import os
 from dask.distributed import wait

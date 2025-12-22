@@ -1,7 +1,7 @@
 import os
 
 import pennylane as qml
-from pilot.pilot_compute_service import PilotComputeService
+from qtau.pilot_compute_service import PilotComputeService
 from time import sleep
 
 RESOURCE_URL_HPC = "slurm://localhost"

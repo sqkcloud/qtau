@@ -4,10 +4,9 @@ from urllib.parse import urlparse
 import uuid
 import os
 
-import pilot
-from pilot import job
-from pilot.job import slurm, ssh
-from pilot.pcs_logger import PilotComputeServiceLogger
+import qtau
+from qtau.job import slurm, ssh
+from qtau.pcs_logger import PilotComputeServiceLogger
 
 
 class PilotManager:

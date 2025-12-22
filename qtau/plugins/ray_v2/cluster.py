@@ -7,9 +7,9 @@ from urllib.parse import urlparse
 
 import ray
 
-from pilot.pilot_enums_exceptions import ExecutionEngine
-from pilot.plugins.pilot_manager_base import PilotManager
-from pilot.util.ssh_utils import execute_ssh_command, execute_ssh_command_as_daemon, get_localhost
+from qtau.pilot_enums_exceptions import ExecutionEngine
+from qtau.plugins.pilot_manager_base import PilotManager
+from qtau.util.ssh_utils import execute_ssh_command, execute_ssh_command_as_daemon, get_localhost
 import subprocess
 
 

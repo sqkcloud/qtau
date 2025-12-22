@@ -9,7 +9,7 @@ import time
 import uuid
 from urllib.parse import urlparse
 
-from pilot.pcs_logger import PilotComputeServiceLogger
+from qtau.pcs_logger import PilotComputeServiceLogger
 
 
 class Service(object):

@@ -10,7 +10,7 @@ import uuid
 import pprint
 from urllib.parse import urlparse
 
-from pilot.pcs_logger import PilotComputeServiceLogger
+from qtau.pcs_logger import PilotComputeServiceLogger
 
 
 class State:

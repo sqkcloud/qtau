@@ -1,9 +1,9 @@
 import os
 
-from pilot.pilot_enums_exceptions import ExecutionEngine
+from qtau.pilot_enums_exceptions import ExecutionEngine
 import time
 
-from pilot.pilot_compute_service import PilotComputeService
+from qtau.pilot_compute_service import PilotComputeService
 
 RESOURCE_URL_HPC = "slurm://localhost"
 WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")

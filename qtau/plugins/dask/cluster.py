@@ -20,7 +20,7 @@ from dask.distributed import Client, SSHCluster
 # Resource Managers supported by Dask Pilot-quantum Plugin
 import pilot.job.slurm
 import pilot.job.ssh
-from pilot.pcs_logger import PilotComputeServiceLogger
+from qtau.pcs_logger import PilotComputeServiceLogger
 
 from dask.distributed import Scheduler
 import psutil

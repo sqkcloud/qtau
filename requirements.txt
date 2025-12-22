@@ -6,3 +6,4 @@ ray[all]~=2.40.0
 argparse~=1.4.0
 asyncssh==2.16.0
 pennylane~=0.37.0
+pytest==9.0.2

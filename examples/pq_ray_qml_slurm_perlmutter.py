@@ -1,6 +1,6 @@
 import os
 
-from pilot.pilot_enums_exceptions import ExecutionEngine
+from qtau.pilot_enums_exceptions import ExecutionEngine
 print("PYTHONPATH:", os.getenv('PYTHONPATH'))
 import sys
 import socket
@@ -10,8 +10,8 @@ from pennylane import numpy as np
 from scipy.optimize import minimize
 
 import ray
-import pilot
-from pilot.pilot_compute_service import PilotComputeService
+import qtau
+from qtau.pilot_compute_service import PilotComputeService
 
 RESOURCE_URL_HPC = "slurm://localhost"
 #WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")

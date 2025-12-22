@@ -18,7 +18,7 @@ import datetime
 import ray
 import getpass
 
-from pilot.util.ssh_utils import execute_ssh_command, execute_ssh_command_as_daemon
+from qtau.util.ssh_utils import execute_ssh_command, execute_ssh_command_as_daemon
 
 
 logging.basicConfig(level=logging.DEBUG)

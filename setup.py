@@ -49,7 +49,7 @@ def create_manifest():
 
 # update_version()
 
-setup(name='QTAU',
+setup(name='qtau',
       version=get_version(),
       description='Framework for Management of Quantum-HPC applications on HPC clusters (Torque/PBS/SLURM)',
       author='Son Dang, Youngje Son',
@@ -68,7 +68,7 @@ setup(name='QTAU',
       # data files for easy_install
       package_data={'': ['*.xml', '*.yaml', '*.properties']},
       install_requires=['uuid', 'argparse', 'python-hostlist', 'dask', 'distributed', 'pyspark', 'asyncssh',
-                        'boto3'],
+                        "pennylane"],
       entry_points={
           'console_scripts': ['pq=commandline.main:main',
                               'qtau=commandline.main:main']

@@ -23,7 +23,7 @@ import pilot.job.slurm
 import pilot.job.ssh
 from urllib.parse import urlparse
 
-from pilot.util.ssh_utils import execute_ssh_command, execute_ssh_command_as_daemon
+from qtau.util.ssh_utils import execute_ssh_command, execute_ssh_command_as_daemon
 
 
 class Manager():

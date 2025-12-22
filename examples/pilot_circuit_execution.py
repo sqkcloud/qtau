@@ -27,7 +27,7 @@ from qiskit.primitives import (
 
 from qiskit.circuit.library import EfficientSU2
 
-from pilot.pilot_compute_service import ExecutionEngine, PilotComputeService
+from qtau.pilot_compute_service import ExecutionEngine, PilotComputeService
 
 RESOURCE_URL_HPC = "ssh://localhost"
 WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")

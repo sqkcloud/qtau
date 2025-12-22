@@ -5,9 +5,9 @@ from urllib.parse import urlparse
 
 import distributed
 from pilot import pilot_enums_exceptions
-from pilot.pilot_enums_exceptions import ExecutionEngine
-from pilot.pilot_compute_service import PilotAPIException
-from pilot.plugins.pilot_manager_base import PilotManager
+from qtau.pilot_enums_exceptions import ExecutionEngine
+from qtau.pilot_compute_service import PilotAPIException
+from qtau.plugins.pilot_manager_base import PilotManager
 import subprocess
 
 

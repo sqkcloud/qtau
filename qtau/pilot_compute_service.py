@@ -11,10 +11,10 @@ from distributed import Future
 from dask.distributed import wait
 import ray
 
-from pilot.pilot_enums_exceptions import ExecutionEngine, PilotAPIException
-from pilot.pcs_logger import PilotComputeServiceLogger
-from pilot.plugins.dask_v2 import cluster as dask_cluster_manager
-from pilot.plugins.ray_v2 import cluster as ray_cluster_manager
+from qtau.pilot_enums_exceptions import ExecutionEngine, PilotAPIException
+from qtau.pcs_logger import PilotComputeServiceLogger
+from qtau.plugins.dask_v2 import cluster as dask_cluster_manager
+from qtau.plugins.ray_v2 import cluster as ray_cluster_manager
 
 
 METRICS = {
@@ -264,6 +264,9 @@ class PilotCompute(PilotComputeBase):
             self.batch_job.cancel()
 
     def get_state(self):
+        """
+        Get the state of the PilotCompute.
+        """
         if self.batch_job:
             return self.batch_job.get_state()
 
@@ -274,15 +277,24 @@ class PilotCompute(PilotComputeBase):
         return self.cluster_manager.get_config_data()
 
     def get_client(self):
+        """
+        Returns the native client for interacting with the task execution engine (i.e. Dask or Ray) started via the Pilot-Job.
+        see also get_context()
+        """
         return self.cluster_manager.get_client()
 
     def wait(self):
         self.cluster_manager.wait()
 
-    def submit_task(self, func, *args, **kwargs):
-        kwargs["pilot"] = self.get_id()
-        return super().submit_task(func, *args, **kwargs)
+    def wait_tasks(self, tasks):
+        wait(tasks)
+        
 
+    def get_context(self, configuration=None):
+        """
+        Returns the context for interacting with the task execution engine (i.e. Dask or Ray) started via the Pilot-Job.
+        """
+        return self.cluster_manager.get_context(configuration)
 
 class PilotFuture:
     def __init__(self, future: Future):
@@ -314,10 +326,5 @@ class PilotFuture:
 
     def __repr__(self):
         return f"PilotFuture({self._future})"
-
-    # Add additional methods or properties specific to your use case
-    def custom_method(self):
-        # Custom logic or functionality
-        pass
 
 

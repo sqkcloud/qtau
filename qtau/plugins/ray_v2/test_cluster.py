@@ -2,7 +2,7 @@ import subprocess
 import unittest
 from unittest.mock import patch
 
-from pilot.plugins.ray_v2.cluster import RayManager
+from qtau.plugins.ray_v2.cluster import RayManager
 
 TMP_DIR = "/tmp"
 

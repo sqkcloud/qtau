@@ -3,7 +3,7 @@ import os
 
 import pennylane as qml
 import ray
-from pilot.pilot_compute_service import ExecutionEngine, PilotComputeService
+from qtau.pilot_compute_service import ExecutionEngine, PilotComputeService
 from time import sleep
 
 RESOURCE_URL_HPC = "ssh://localhost"

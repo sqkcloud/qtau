@@ -1,7 +1,7 @@
 import math
 import os
 import ray
-from pilot.pilot_compute_service import ExecutionEngine, PilotComputeService
+from qtau.pilot_compute_service import ExecutionEngine, PilotComputeService
 from time import sleep
 import time
 import csv

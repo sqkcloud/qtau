@@ -6,8 +6,8 @@ import subprocess
 import time
 from optparse import OptionParser
 
-from pilot.plugins.pilot_agent_base import PilotAgent
-from pilot.util.ssh_utils import execute_local_process, execute_ssh_command, get_localhost
+from qtau.plugins.pilot_agent_base import PilotAgent
+from qtau.util.ssh_utils import execute_local_process, execute_ssh_command, get_localhost
 
 STOP=False
 

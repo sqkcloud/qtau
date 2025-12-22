@@ -1,24 +1,30 @@
 # QTAU
 
-QTAU is presented as a Quantum-HPC middleware framework designed to address the challenges of integrating quantum and classical computing resources. It focuses on managing heterogeneous resources, including diverse Quantum Processing Unit (QPU) modalities and various integration types with classical resources, such as accelerators.
- 
-Requirements:
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 
-	* Currently only SLURM clusters are supported
-	* Setup password-less documentation, e.g., using sshproxy on Perlmutter.
+**QTAU** (Quantum Task Automation Utility) is a Quantum-HPC middleware framework designed to address the challenges of integrating quantum and classical computing resources. It provides a unified interface for managing heterogeneous resources, including diverse Quantum Processing Unit (QPU) modalities and various integration types with classical HPC systems.
 
-Anaconda or Miniconda is the preferred distribution
+## Features
 
+- **Multi-Engine Support**: Pluggable architecture supporting both [Dask](https://www.dask.org/) and [Ray](https://www.ray.io/) distributed computing backends
+- **HPC Cluster Integration**: Native support for SLURM job schedulers and SSH-based remote execution
+- **Quantum Framework Compatibility**: Seamless integration with [PennyLane](https://pennylane.ai/) and [Qiskit](https://qiskit.org/)
+- **Task Metrics & Monitoring**: Automatic performance tracking with detailed timing breakdowns
+- **Scalable Architecture**: From single-node development to multi-node HPC deployments
+
+## Requirements
+
+- Python 3.8+
+- Anaconda or Miniconda (recommended)
+- SLURM cluster access (for HPC deployments)
+- Password-less SSH authentication configured (e.g., using `sshproxy` on Perlmutter)
 
 ## Installation
 
-Create environment with tool of your choice:
-
-    conda create -n qtau python=3.12
-
 Requirement (in case a manual installation is required):
 
-The best way to utilize QTAU is Anaconda, which provides an easy way to install
+### Using pip
 
     pip install -r requirements.txt
 
@@ -26,53 +32,427 @@ To install QTAU type:
 
     python setup.py install
 
-## API Usage
+## Usage Examples
 
-Here is a simple script that launches Pythonic functions as tasks on remote SLURM nodes using QTAU framework.
+### Example 1: Basic Task Execution with Dask
 
+```python
+import os
+from qtau.pilot_compute_service import PilotComputeService
+from qtau.pilot_enums_exceptions import ExecutionEngine
+
+WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
+
+# Define pilot configuration
+pilot_description = {
+    "resource": "ssh://localhost",
+    "number_of_nodes": 2,
+    "cores_per_node": 4,
+}
+
+# Initialize PilotComputeService with Dask backend
+pcs = PilotComputeService(ExecutionEngine.DASK, WORKING_DIRECTORY)
+pcs.create_pilot(pilot_compute_description=pilot_description)
+
+# Define a simple task
+def compute_square(x):
+    return x ** 2
+
+try:
+    # Submit multiple tasks
+    tasks = [pcs.submit_task(compute_square, i) for i in range(10)]
+
+    # Wait for all tasks to complete
+    pcs.wait_tasks(tasks)
+
+    # Retrieve results
+    results = pcs.get_results(tasks)
+    print(results)  # [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+finally:
+    pcs.cancel()
 ```
 
-from pilot.pilot_compute_service import ExecutionEngine, PilotComputeService
+### Example 2: Using Ray Backend with Resource Specifications
 
-pilot_compute_description = {
-    "resource": "slurm://localhost",
-    "working_directory": WORKING_DIRECTORY,
+```python
+import os
+from qtau.pilot_compute_service import PilotComputeService
+from qtau.pilot_enums_exceptions import ExecutionEngine
+
+WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
+
+pilot_description = {
+    "resource": "ssh://localhost",
     "number_of_nodes": 2,
-    "cores_per_node": 1,
-    "queue": "premium",
-    "walltime": 30,
-    "type": "ray",
-    "project": "sample",
-    "scheduler_script_commands": ["#SBATCH --constraint=cpu"]    
+    "cores_per_node": 8,
+}
+
+# Initialize with Ray execution engine
+pcs = PilotComputeService(
+    execution_engine=ExecutionEngine.RAY,
+    working_directory=WORKING_DIRECTORY
+)
+pcs.create_pilot(pilot_compute_description=pilot_description)
+
+def heavy_computation(data):
+    # Simulate CPU-intensive task
+    return sum(x ** 2 for x in range(data))
+
+try:
+    # Submit tasks with specific resource requirements
+    tasks = []
+    for i in range(10):
+        task = pcs.submit_task(
+            heavy_computation,
+            i * 1000,
+            resources={'num_cpus': 1, 'num_gpus': 0, 'memory': None}
+        )
+        tasks.append(task)
+
+    pcs.wait_tasks(tasks)
+    results = pcs.get_results(tasks)
+    print(results)
+finally:
+    pcs.cancel()
+```
+
+### Example 3: Quantum Circuit Execution with PennyLane
+
+```python
+import os
+import pennylane as qml
+from qtau.pilot_compute_service import PilotComputeService
+from qtau.pilot_enums_exceptions import ExecutionEngine
+
+WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
+
+pilot_description = {
+    "resource": "ssh://localhost",
+    "number_of_nodes": 2,
+    "cores_per_node": 10,
 }
 
 def pennylane_quantum_circuit():
-    # pennylane circuit definition...
-    pass
-    
-# Pilot-Creation
-pcs = PilotComputeService(execution_engine=ExecutionEngine.RAY, working_directory=WORKING_DIRECTORY)
-pcs.create_pilot(pilot_compute_description=pilot_compute_description_ray)
+    wires = 4
+    layers = 1
+    dev = qml.device('default.qubit', wires=wires, shots=None)
 
-# Task submission
-tasks = []
-for i in range(10):
-    k = pcs.submit_task(pennylane_quantum_circuit, i, resources={'num_cpus': 1, 'num_gpus': 0, 'memory': None})
-    tasks.append(k)
+    @qml.qnode(dev)
+    def circuit(parameters):
+        qml.StronglyEntanglingLayers(weights=parameters, wires=range(wires))
+        return [qml.expval(qml.PauliZ(i)) for i in range(wires)]
 
-# Wait for tasks to complete
-pcs.wait_tasks(tasks)
+    shape = qml.StronglyEntanglingLayers.shape(n_layers=layers, n_wires=wires)
+    weights = qml.numpy.random.random(size=shape)
+    return circuit(weights)
 
-# Terminate the pilot
-pcs.cancel()
+# Initialize service
+pcs = PilotComputeService(ExecutionEngine.DASK, WORKING_DIRECTORY)
+pcs.create_pilot(pilot_compute_description=pilot_description)
 
+try:
+    # Submit quantum circuit tasks with custom names
+    tasks = []
+    for i in range(10):
+        task = pcs.submit_task(
+            pennylane_quantum_circuit,
+            task_name=f"quantum_task_{i}"
+        )
+        tasks.append(task)
+
+    pcs.wait_tasks(tasks)
+    results = pcs.get_results(tasks)
+    print(f"Quantum circuit results: {results}")
+finally:
+    pcs.cancel()
 ```
 
+### Example 4: Multi-Pilot Deployment
+
+```python
+import os
+from qtau.pilot_compute_service import PilotComputeService
+from qtau.pilot_enums_exceptions import ExecutionEngine
+
+WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
+
+pilot_description = {
+    "resource": "ssh://localhost",
+    "number_of_nodes": 2,
+    "cores_per_node": 10,
+}
+
+def process_data(x):
+    return x * 2
+
+# Initialize service
+pcs = PilotComputeService(ExecutionEngine.DASK, WORKING_DIRECTORY)
+
+# Create multiple pilots
+for i in range(2):
+    pilot_description["name"] = f"pilot-{i}"
+    pcs.create_pilot(pilot_compute_description=pilot_description)
+
+try:
+    # Get list of available pilots
+    pilots = pcs.get_pilots()
+    print(f"Available pilots: {pilots}")
+
+    tasks = []
+
+    # Submit tasks to any available pilot
+    for i in range(10):
+        task = pcs.submit_task(process_data, i, task_name=f"general_task_{i}")
+        tasks.append(task)
+
+    # Submit tasks to a specific pilot
+    for i in range(10):
+        task = pcs.submit_task(
+            process_data,
+            i,
+            task_name=f"pilot0_task_{i}",
+            pilot=pilots[0]  # Route to specific pilot
+        )
+        tasks.append(task)
+
+    pcs.wait_tasks(tasks)
+    results = pcs.get_results(tasks)
+    print(results)
+finally:
+    pcs.cancel()
+```
+
+### Example 5: SLURM Cluster Deployment (HPC)
+
+```python
+import os
+from qtau.pilot_compute_service import PilotComputeService
+from qtau.pilot_enums_exceptions import ExecutionEngine
+
+WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
+
+# SLURM configuration for HPC cluster
+pilot_description = {
+    "resource": "slurm://localhost",
+    "working_directory": WORKING_DIRECTORY,
+    "number_of_nodes": 4,
+    "cores_per_node": 24,
+    "gpus_per_node": 4,
+    "queue": "debug",
+    "walltime": 30,  # minutes
+    "project": "your_project_id",
+    "conda_environment": "/path/to/conda/env",
+    "scheduler_script_commands": [
+        "#SBATCH --constraint=gpu",
+        "#SBATCH --gpus-per-task=1",
+        "#SBATCH --ntasks-per-node=4",
+        "#SBATCH --gpu-bind=none"
+    ]
+}
+
+pcs = PilotComputeService(
+    execution_engine=ExecutionEngine.RAY,
+    working_directory=WORKING_DIRECTORY
+)
+
+pilot = pcs.create_pilot(pilot_compute_description=pilot_description)
+pilot.wait()  # Wait for SLURM job to start
+
+try:
+    # Submit GPU-accelerated tasks
+    tasks = []
+    for i in range(10):
+        task = pcs.submit_task(
+            your_gpu_function,
+            i,
+            resources={'num_cpus': 1, 'num_gpus': 1, 'memory': None}
+        )
+        tasks.append(task)
+
+    pcs.wait_tasks(tasks)
+    results = pcs.get_results(tasks)
+finally:
+    pcs.cancel()
+```
+
+### Example 6: MPI Task Execution
+
+```python
+import os
+from qtau.pilot_compute_service import PilotComputeService
+from qtau.pilot_enums_exceptions import ExecutionEngine
+
+WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
+
+pcs = PilotComputeService(ExecutionEngine.RAY, WORKING_DIRECTORY)
+pcs.create_pilot(pilot_compute_description={
+    "resource": "slurm://localhost",
+    "number_of_nodes": 4,
+    "cores_per_node": 32,
+})
+
+try:
+    # Submit MPI task
+    task = pcs.submit_mpi_task(
+        script_path="/path/to/mpi_script.py",
+        num_procs=128,
+        "arg1", "arg2"  # Additional arguments
+    )
+
+    pcs.wait_tasks([task])
+    stdout, stderr = pcs.get_results([task])[0]
+    print(stdout)
+finally:
+    pcs.cancel()
+```
+
+### Example 7: Using the Task Decorator
+
+```python
+import os
+from qtau.pilot_compute_service import PilotComputeService
+from qtau.pilot_enums_exceptions import ExecutionEngine
+
+WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
+
+pcs = PilotComputeService(ExecutionEngine.DASK, WORKING_DIRECTORY)
+pcs.create_pilot(pilot_compute_description={
+    "resource": "ssh://localhost",
+    "number_of_nodes": 2,
+    "cores_per_node": 4,
+})
+
+# Use the task decorator for automatic submission
+@pcs.task
+def distributed_function(x, y):
+    return x + y
+
+try:
+    # Tasks are automatically submitted when called
+    future = distributed_function(10, 20)
+    result = future.result()
+    print(f"Result: {result}")  # Result: 30
+finally:
+    pcs.cancel()
+```
+
+### Example 8: Accessing the Native Client
+
+```python
+import os
+import ray
+from qtau.pilot_compute_service import PilotComputeService
+from qtau.pilot_enums_exceptions import ExecutionEngine
+
+WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
+
+pcs = PilotComputeService(ExecutionEngine.RAY, WORKING_DIRECTORY)
+pcs.create_pilot(pilot_compute_description={
+    "resource": "ssh://localhost",
+    "number_of_nodes": 2,
+    "cores_per_node": 4,
+})
+
+def square(x):
+    return x ** 2
+
+try:
+    # Get the native Ray client for advanced operations
+    ray_client = pcs.get_client()
+
+    with ray_client:
+        # Use Ray API directly
+        results = ray.get([ray.remote(square).remote(i) for i in range(10)])
+        print(results)
+finally:
+    pcs.cancel()
+```
+
+## Configuration Reference
+
+### Pilot Description Parameters
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `resource` | Resource URL for job submission | `ssh://localhost`, `slurm://localhost` |
+| `name` | Pilot identifier (auto-generated if not provided) | `pilot-0` |
+| `number_of_nodes` | Number of compute nodes | `2` |
+| `cores_per_node` | CPU cores per node | `4` |
+| `gpus_per_node` | GPUs per node (optional) | `1` |
+| `queue` | SLURM queue/partition | `debug`, `regular` |
+| `walltime` | Job walltime in minutes | `30` |
+| `project` | HPC project/account ID | `m4408` |
+| `conda_environment` | Path to conda environment | `/path/to/env` |
+| `scheduler_script_commands` | Additional SLURM directives | `["#SBATCH --constraint=gpu"]` |
+
+### Supported Resource URLs
+
+| URL | Description |
+|-----|-------------|
+| `ssh://localhost` | Local SSH execution |
+| `ssh://hostname` | Remote SSH execution |
+| `slurm://localhost` | SLURM cluster submission |
+| `pbs+ssh://hostname` | PBS cluster via SSH |
+
+## Project Structure
+
+```
+qtau/
+├── qtau/                          # Main package
+│   ├── pilot_compute_service.py   # Core service API
+│   ├── pilot_enums_exceptions.py  # Enums and exceptions
+│   ├── pcs_logger.py              # Logging system
+│   ├── job/                       # Job submission modules
+│   │   ├── slurm.py               # SLURM integration
+│   │   ├── ssh.py                 # SSH execution
+│   │   └── local_subprocess.py    # Local execution
+│   ├── plugins/                   # Execution engine plugins
+│   │   ├── dask_v2/               # Dask backend
+│   │   └── ray_v2/                # Ray backend
+│   └── util/                      # Utility functions
+├── examples/                      # Example scripts
+├── tests/                         # Test suite
+├── requirements.txt               # Python dependencies
+└── setup.py                       # Package configuration
+```
+
+## Metrics and Logging
+
+QTAU automatically tracks task execution metrics and writes them to `metrics.csv` in the working directory:
+
+| Metric | Description |
+|--------|-------------|
+| `task_id` | Unique task identifier |
+| `pilot_scheduled` | Pilot that executed the task |
+| `submit_time` | Task submission timestamp |
+| `wait_time_secs` | Time waiting in queue |
+| `execution_secs` | Actual execution time |
+| `status` | Task status (SUCCESS/FAILED) |
+| `error_msg` | Error message if failed |
+
+Logs are written to `qtau.log` in the working directory.
 
 ## Hints
 
 Your default conda environment should contain all QTAU and application dependencies. Activate it, e.g., in the `.bashrc`
 
+## Dependencies
+
+- `dask~=2024.12.1` / `distributed~=2024.12.1`
+- `ray[all]~=2.40.0`
+- `pennylane~=0.37.0`
+- `asyncssh==2.16.0`
+- `python-hostlist==1.23.0`
+
 ## License
 
 QTAU is released under the Apache 2.0 license. See LICENSE for more details.
+
+## Authors
+
+- Son Dang
+- Youngje Son
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.

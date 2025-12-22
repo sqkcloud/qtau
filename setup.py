@@ -49,7 +49,7 @@ def create_manifest():
 
 # update_version()
 
-setup(name='QTAU',
+setup(name='qtau',
       version=get_version(),
       description='Framework for Management of Quantum-HPC applications on HPC clusters (Torque/PBS/SLURM)',
       author='Son Dang, Youngje Son',

@@ -4,7 +4,7 @@ import time
 from urllib.parse import urlparse
 
 import distributed
-from pilot import pilot_enums_exceptions
+from qtau import pilot_enums_exceptions
 from qtau.pilot_enums_exceptions import ExecutionEngine
 from qtau.pilot_compute_service import PilotAPIException
 from qtau.plugins.pilot_manager_base import PilotManager

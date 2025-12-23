@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pennylane as qml
 from pennylane import numpy as np
 
-import pilot.pilot_compute_service as pcs
+import qtau.pilot_compute_service as pcs
 
 plt.set_loglevel("warning")
 

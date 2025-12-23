@@ -19,8 +19,8 @@ logging.getLogger("tornado.application").setLevel(logging.CRITICAL)
 logging.getLogger("distributed.utils").setLevel(logging.CRITICAL)
 
 # Resource Managers supported by Dask Pilot-quantum Plugin
-import pilot.job.slurm
-import pilot.job.ssh
+import qtau.job.slurm
+import qtau.job.ssh
 from urllib.parse import urlparse
 
 from qtau.util.ssh_utils import execute_ssh_command, execute_ssh_command_as_daemon

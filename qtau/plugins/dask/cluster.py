@@ -18,8 +18,8 @@ import numpy as np
 from dask.distributed import Client, SSHCluster
 
 # Resource Managers supported by Dask Pilot-quantum Plugin
-import pilot.job.slurm
-import pilot.job.ssh
+import qtau.job.slurm
+import qtau.job.ssh
 from qtau.pcs_logger import PilotComputeServiceLogger
 
 from dask.distributed import Scheduler

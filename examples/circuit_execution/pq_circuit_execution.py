@@ -2,7 +2,7 @@ import os
 
 import pennylane as qml
 from examples.circuit_execution.qiskit_benchmark import generate_data
-from pilot.pilot_compute_service import PilotComputeService
+from qtau.pilot_compute_service import PilotComputeService
 from time import sleep
 from qiskit_aer.primitives import Estimator as AirEstimator
 

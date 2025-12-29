@@ -1,13 +1,13 @@
 import os
 
 import pennylane as qml
-from qtau.pilot_compute_service import ExecutionEngine, PilotComputeService
+from qtau.qtau_compute_service import ExecutionEngine, QTauComputeService
 from time import sleep
 
 RESOURCE_URL = "ssh://localhost"
 WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
 
-pilot_compute_description = {
+qtau_compute_description = {
     "resource": RESOURCE_URL,
     "number_of_nodes": 2,
     "cores_per_node": 10,
@@ -15,10 +15,10 @@ pilot_compute_description = {
 
 
 def start_pcs():
-    pcs = PilotComputeService(ExecutionEngine.DASK, WORKING_DIRECTORY)
+    pcs = QTauComputeService(ExecutionEngine.DASK, WORKING_DIRECTORY)
     for i in range(2):
-        pilot_compute_description["name"] = f"pilot-{i}"
-        pcs.create_pilot(pilot_compute_description=pilot_compute_description)
+        qtau_compute_description["name"] = f"qtau-{i}"
+        pcs.create_qtau(qtau_compute_description=qtau_compute_description)
     return pcs
 
 def pennylane_quantum_circuit():
@@ -39,13 +39,13 @@ def pennylane_quantum_circuit():
 if __name__ == "__main__":
     pcs = None
     try:
-        # Start Pilots
+        # Start QTaus
         pcs = start_pcs()
 
-        pilots = pcs.get_pilots()
+        qtaus = pcs.get_qtaus()
         
-        # print pilot names
-        for pname in pilots:
+        # print qtau names
+        for pname in qtaus:
             print(pname)
 
         # Submit tasks to pcs
@@ -55,7 +55,7 @@ if __name__ == "__main__":
             tasks.append(k)
 
         for i in range(10):
-            k = pcs.submit_task(pennylane_quantum_circuit, task_name = f"task_{pilots[0]}_pennylane-{i}", pilot=pilots[0])
+            k = pcs.submit_task(pennylane_quantum_circuit, task_name = f"task_{qtaus[0]}_pennylane-{i}", qtau=qtaus[0])
             tasks.append(k)
 
 

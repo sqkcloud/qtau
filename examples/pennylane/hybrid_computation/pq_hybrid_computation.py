@@ -1,7 +1,7 @@
 import pennylane as qml
 from pennylane import numpy as np
 import matplotlib.pyplot as plt
-from pilot.pilot_compute_service import PilotComputeService
+from qtau.qtau_compute_service import QTauComputeService
 
 plt.set_loglevel("warning")
 
@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 RESOURCE_URL_HPC = "ssh://localhost"
 WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
 
-pilot_compute_description_dask = {
+qtau_compute_description_dask = {
     "resource": RESOURCE_URL_HPC,
     "working_directory": WORKING_DIRECTORY,
     "queue": "debug",
@@ -25,9 +25,9 @@ pilot_compute_description_dask = {
 }
 
 
-def start_pilot():
-    pcs = PilotComputeService()
-    dp = pcs.create_pilot(pilot_compute_description=pilot_compute_description_dask)
+def start_qtau():
+    pcs = QTauComputeService()
+    dp = pcs.create_qtau(qtau_compute_description=qtau_compute_description_dask)
     dp.wait()
     return dp
 
@@ -79,19 +79,19 @@ def workflow(init_params, steps):
 
 
 if __name__ == "__main__":
-    dask_pilot = None
+    dask_qtau = None
 
     try:
-        # Start Pilot
-        dask_pilot = start_pilot()
+        # Start QTau
+        dask_qtau = start_qtau()
 
         # Workflow
         init_params = [0.01, 0.01]
         params = get_init_params(init_params)
         steps = 150
 
-        opt = dask_pilot.submit_task(get_optimizer)
-        t = dask_pilot.submit_task(training, opt, params, cost, steps)
+        opt = dask_qtau.submit_task(get_optimizer)
+        t = dask_qtau.submit_task(training, opt, params, cost, steps)
         opt_params, training_steps, cost_steps = t.result()
 
         #Plot the results
@@ -103,5 +103,5 @@ if __name__ == "__main__":
         plt.tight_layout()
         plt.show()
     finally:
-        if dask_pilot:
-            dask_pilot.cancel()
+        if dask_qtau:
+            dask_qtau.cancel()

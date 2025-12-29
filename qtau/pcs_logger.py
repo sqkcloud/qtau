@@ -2,9 +2,9 @@ import logging
 import os
 
 
-class PilotComputeServiceLogger:
+class QTauComputeServiceLogger:
     """
-    Singleton logger class for Pilot Compute Service.
+    Singleton logger class for QTau Compute Service.
 
     This class provides a singleton logger instance for logging messages to both a file and the console.
     The log file location can be customized using the `PILOT_LOG_FILE` environment variable. If not provided,
@@ -74,8 +74,8 @@ class PilotComputeServiceLogger:
 # Example usage:
 if __name__ == "__main__":
     pcs_working_directory = "/path/to/pcs_working_directory"
-    logger1 = PilotComputeServiceLogger(pcs_working_directory)
-    logger2 = PilotComputeServiceLogger(pcs_working_directory)
+    logger1 = QTauComputeServiceLogger(pcs_working_directory)
+    logger2 = QTauComputeServiceLogger(pcs_working_directory)
 
     # Both logger1 and logger2 are the same instance
     print(logger1 is logger2)  # Output: True

@@ -2,14 +2,14 @@ import os
 
 import pennylane as qml
 from examples.circuit_execution.qiskit_benchmark import generate_data
-from qtau.pilot_compute_service import PilotComputeService
+from qtau.qtau_compute_service import QTauComputeService
 from time import sleep
 from qiskit_aer.primitives import Estimator as AirEstimator
 
 RESOURCE_URL_HPC = "ssh://localhost"
 WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
 
-pilot_compute_description_dask = {
+qtau_compute_description_dask = {
     "resource": RESOURCE_URL_HPC,
     "working_directory": WORKING_DIRECTORY,
     "type": "dask",
@@ -18,9 +18,9 @@ pilot_compute_description_dask = {
 }
 
 
-def start_pilot():
-    pcs = PilotComputeService()
-    dp = pcs.create_pilot(pilot_compute_description=pilot_compute_description_dask)
+def start_qtau():
+    pcs = QTauComputeService()
+    dp = pcs.create_qtau(qtau_compute_description=qtau_compute_description_dask)
     dp.wait()
     return dp
 
@@ -30,14 +30,14 @@ def run_circuit(circ_obs, qiskit_backend_options):
     return estimator_result
 
 if __name__ == "__main__":
-    dask_pilot, dask_client = None, None
+    dask_qtau, dask_client = None, None
 
     try:
-        # Start Pilot
-        dask_pilot = start_pilot()
+        # Start QTau
+        dask_qtau = start_qtau()
 
         # Get Dask client details
-        dask_client = dask_pilot.get_client()
+        dask_client = dask_qtau.get_client()
         print(dask_client.scheduler_info())
 
 
@@ -53,10 +53,10 @@ if __name__ == "__main__":
 
         tasks = []
         for i, co in enumerate(circuits_observables):
-            k = dask_pilot.submit_task(f"task_ce-{i}",run_circuit, co, {"method": "statevector"})
+            k = dask_qtau.submit_task(f"task_ce-{i}",run_circuit, co, {"method": "statevector"})
             tasks.append(k)
 
-        dask_pilot.wait_tasks(tasks)
+        dask_qtau.wait_tasks(tasks)
     finally:
-        if dask_pilot:
-            dask_pilot.cancel()
+        if dask_qtau:
+            dask_qtau.cancel()

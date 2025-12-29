@@ -58,16 +58,16 @@ class RayBootstrap():
         self.job_working_directory = os.path.join(self.working_directory) 
         self.job_conf_dir = os.path.join(self.job_working_directory, "config")
         self.job_output = open(os.path.join(self.working_directory, 
-                                            "pilot-agent-" +  
+                                            "qtau-agent-" +  
                                             self.job_id[:12] + "-" + self.job_timestamp + "_output.log"), "w")
         self.job_error = open(os.path.join(self.working_directory, 
-                                            "pilot-agent-" +  
+                                            "qtau-agent-" +  
                                             self.job_id[:12] + "-" + self.job_timestamp + "_error.log"), "w")
         self.ray_headnode_address = ""
         self.ray_process = None                
         self.cores_per_node=int(cores_per_node)
         self.gpu_per_nodes=int(gpus_per_node)
-        self.ssh_key = "~/.ssh/mykey" #perlmutter - TODO: Should make it as input parameter from the pilot job description.
+        self.ssh_key = "~/.ssh/mykey" #perlmutter - TODO: Should make it as input parameter from the qtau job description.
         self.ray_memory_limit=92e9    #Stampede
         self.ip_head_node=ip_head_node
         #self.ray_memory_limit=110e9 #Wrangler
@@ -286,7 +286,7 @@ if __name__ == "__main__" :
     
     parser.add_option("-j", "--job", type="string", action="store", 
                       dest="jobid", default="ray-local-" + str(uuid.uuid1()), 
-                      help="Job ID of the Pilot Job")
+                      help="Job ID of the QTau Job")
     
     parser.add_option("-c", "--clean", action="store_true", dest="clean",
                   help="clean Ray")

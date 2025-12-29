@@ -5,7 +5,7 @@ import logging
 import hostlist
 
 
-class PilotAgent():
+class QTauAgent():
     def __init__(self, working_directory, scheduler_file_path, worker_config_file, worker_name="pq-worker"):
         self.working_directory = working_directory
         self.scheduler_file_path = scheduler_file_path

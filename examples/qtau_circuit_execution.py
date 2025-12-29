@@ -27,12 +27,12 @@ from qiskit.primitives import (
 
 from qiskit.circuit.library import EfficientSU2
 
-from qtau.pilot_compute_service import ExecutionEngine, PilotComputeService
+from qtau.qtau_compute_service import ExecutionEngine, QTauComputeService
 
 RESOURCE_URL_HPC = "ssh://localhost"
 WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
 
-pilot_compute_description_ray = {
+qtau_compute_description_ray = {
     "resource": RESOURCE_URL_HPC,
     "working_directory": WORKING_DIRECTORY,
     "type": "ray",
@@ -48,9 +48,9 @@ pilot_compute_description_ray = {
                                   "#SBATCH --gpu-bind=none"],
 }
 
-def start_pilot(pilot_compute_description_ray):
-    pcs = PilotComputeService(execution_engine=ExecutionEngine.RAY, working_directory=WORKING_DIRECTORY)
-    pcd = pcs.create_pilot(pilot_compute_description=pilot_compute_description_ray)
+def start_qtau(qtau_compute_description_ray):
+    pcs = QTauComputeService(execution_engine=ExecutionEngine.RAY, working_directory=WORKING_DIRECTORY)
+    pcd = pcs.create_qtau(qtau_compute_description=qtau_compute_description_ray)
     pcd.wait()
     time.sleep(60)
     return pcs
@@ -122,9 +122,9 @@ if __name__ == "__main__":
     for nodes in num_nodes:
         start_time = time.time()
         try:
-            # Start Pilot
-            pilot_compute_description_ray["number_of_nodes"] = nodes
-            pcs = start_pilot(pilot_compute_description_ray)
+            # Start QTau
+            qtau_compute_description_ray["number_of_nodes"] = nodes
+            pcs = start_qtau(qtau_compute_description_ray)
             logger = pcs.get_logger()
             
             subexperiments, coefficients, subobservables, observable, circuit = pre_processing(logger)

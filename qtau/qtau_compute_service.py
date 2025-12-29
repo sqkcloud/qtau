@@ -8,8 +8,8 @@ import uuid
 from distributed import Future
 import ray
 
-from qtau.pilot_enums_exceptions import ExecutionEngine, PilotAPIException
-from qtau.pcs_logger import PilotComputeServiceLogger
+from qtau.qtau_enums_exceptions import ExecutionEngine, QTauAPIException
+from qtau.pcs_logger import QTauComputeServiceLogger
 from qtau.plugins.dask_v2 import cluster as dask_cluster_manager
 from qtau.plugins.ray_v2 import cluster as ray_cluster_manager
 
@@ -27,7 +27,7 @@ import threading
 
 METRICS = {
     'task_id': None,
-    'pilot_scheduled': None,
+    'qtau_scheduled': None,
     'submit_time': datetime.now(),
     'wait_time_secs': None, 
     'staging_time_secs': 0,
@@ -50,7 +50,7 @@ def run_mpi_task(num_procs, script_path, *args):
 
 SORTED_METRICS_FIELDS = sorted(METRICS.keys())
 
-class PilotComputeBase:
+class QTauComputeBase:
     def __init__(self, execution_engine, working_directory):
         self.execution_engine = execution_engine
         self.pcs_working_directory = working_directory        
@@ -59,7 +59,7 @@ class PilotComputeBase:
 
         self.metrics_file_name = os.path.join(self.pcs_working_directory, "metrics.csv")
         self.client = None
-        self.logger = PilotComputeServiceLogger(self.pcs_working_directory)
+        self.logger = QTauComputeServiceLogger(self.pcs_working_directory)
         
         with open(self.metrics_file_name, 'a', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=SORTED_METRICS_FIELDS)
@@ -75,11 +75,11 @@ class PilotComputeBase:
     def submit_task(self, func, *args, **kwargs):
         task_future = None
         try:
-            pilot_scheduled = 'ANY'
+            qtau_scheduled = 'ANY'
             
-            if "pilot" in kwargs:
-                pilot_scheduled = kwargs["pilot"]
-                del kwargs["pilot"]
+            if "qtau" in kwargs:
+                qtau_scheduled = kwargs["qtau"]
+                del kwargs["qtau"]
 
             task_name = kwargs.get("task_name", f"task-{uuid.uuid4()}")
             if kwargs.get("task_name"):
@@ -89,13 +89,13 @@ class PilotComputeBase:
                 self.client = self.get_client()
 
             if self.client is None:
-                raise PilotAPIException("Cluster client isn't ready/provisioned yet")
+                raise QTauAPIException("Cluster client isn't ready/provisioned yet")
 
-            self.logger.info(f"Running task {task_name} on pilot {pilot_scheduled} with details func:{func.__name__}")
+            self.logger.info(f"Running task {task_name} on qtau {qtau_scheduled} with details func:{func.__name__}")
             
             task_metrics = copy(METRICS)
             task_metrics["task_id"] = task_name
-            task_metrics["pilot_scheduled"] = pilot_scheduled
+            task_metrics["qtau_scheduled"] = qtau_scheduled
             task_metrics["submit_time"] = datetime.now()
             task_metrics["status"] = "RUNNING"
             
@@ -128,11 +128,11 @@ class PilotComputeBase:
             
 
             if self.execution_engine == ExecutionEngine.DASK:
-                if pilot_scheduled != 'ANY':
-                    # find all the wokers in the pilot
+                if qtau_scheduled != 'ANY':
+                    # find all the wokers in the qtau
                     workers = self.client.scheduler_info()['workers']
-                    pilot_workers = [workers[worker]['name'] for worker in workers if workers[worker]['name'].startswith(pilot_scheduled)]                    
-                    task_future = self.client.submit(task_func, self.metrics_file_name, *args, **kwargs, workers=pilot_workers)
+                    qtau_workers = [workers[worker]['name'] for worker in workers if workers[worker]['name'].startswith(qtau_scheduled)]                    
+                    task_future = self.client.submit(task_func, self.metrics_file_name, *args, **kwargs, workers=qtau_workers)
                 else:                
                     task_future = self.client.submit(task_func, self.metrics_file_name, *args, **kwargs)
                     time.sleep(1)
@@ -148,7 +148,7 @@ class PilotComputeBase:
                 task_future = ray.remote(task_func).options(**resources).remote(self.metrics_file_name, *args, **kwargs)                    
         except Exception as e:
             self.logger.error(f"Error submitting task {task_name} with details func:{func.__name__} - {str(e)}")
-            raise PilotAPIException(f"Error submitting task {task_name} with details func:{func.__name__} - {str(e)}")
+            raise QTauAPIException(f"Error submitting task {task_name} with details func:{func.__name__} - {str(e)}")
         
         return task_future
     
@@ -165,7 +165,7 @@ class PilotComputeBase:
             self.client = self.get_client()
 
         if self.client is None:
-            raise PilotAPIException("Cluster client isn't ready/provisioned yet")
+            raise QTauAPIException("Cluster client isn't ready/provisioned yet")
 
         print(f"Running qtask with args {args}, kwargs {kwargs}")
         wrapper_func = self.task(func)
@@ -178,12 +178,12 @@ class PilotComputeBase:
         return self.cluster_manager.get_results(tasks)    
 
 
-class PilotComputeService(PilotComputeBase):
+class QTauComputeService(QTauComputeBase):
     def __init__(self, execution_engine, working_directory="/tmp"):
         self.execution_engine = execution_engine        
         self.pcs_working_directory = f"{working_directory}/pcs-{uuid.uuid4()}"                
         super().__init__(self.execution_engine, self.pcs_working_directory)
-        self.logger.info(f"Initializing PilotComputeService with execution engine {execution_engine} and working directory {self.pcs_working_directory}")
+        self.logger.info(f"Initializing QTauComputeService with execution engine {execution_engine} and working directory {self.pcs_working_directory}")
         
         self.cluster_manager = self.__get_cluster_manager(execution_engine, self.pcs_working_directory)
         
@@ -191,30 +191,30 @@ class PilotComputeService(PilotComputeBase):
         self.cluster_manager.start_scheduler()
         scheduer_end_time = time.time()
         self.logger.info(f"[Metrics]scheduler_startup_metric_secs:{scheduer_end_time - scheduler_start_time}")
-        self.logger.info("PilotComputeService initialized.")
-        self.pilots = {}
+        self.logger.info("QTauComputeService initialized.")
+        self.qtaus = {}
         self.client = None
 
 
-    def create_pilot(self, pilot_compute_description):
-        pilot_submission_start_time = time.time()
-        pilot_name = pilot_compute_description.get("name", f"pilot-{uuid.uuid4()}")
-        pilot_compute_description["name"] = pilot_name
+    def create_qtau(self, qtau_compute_description):
+        qtau_submission_start_time = time.time()
+        qtau_name = qtau_compute_description.get("name", f"qtau-{uuid.uuid4()}")
+        qtau_compute_description["name"] = qtau_name
 
-        self.logger.info(f"Create Pilot with description {pilot_compute_description}")
-        pilot_compute_description["working_directory"] = self.pcs_working_directory
+        self.logger.info(f"Create QTau with description {qtau_compute_description}")
+        qtau_compute_description["working_directory"] = self.pcs_working_directory
 
-        batch_job = self.cluster_manager.submit_pilot(pilot_compute_description)
-        self.pilot_id = batch_job.get_id()
+        batch_job = self.cluster_manager.submit_qtau(qtau_compute_description)
+        self.qtau_id = batch_job.get_id()
 
         details = self.cluster_manager.get_config_data()
         self.logger.info(f"Cluster details: {details}")
-        pilot = PilotCompute(batch_job, cluster_manager=self.cluster_manager)
+        qtau = QTauCompute(batch_job, cluster_manager=self.cluster_manager)
 
-        self.pilots[pilot_name] = pilot
-        pilot_submission_end_time = time.time()
-        self.logger.info(f"[Metrics]pilot_submission_metric_secs:{pilot_submission_end_time - pilot_submission_start_time}")
-        return pilot
+        self.qtaus[qtau_name] = qtau
+        qtau_submission_end_time = time.time()
+        self.logger.info(f"[Metrics]qtau_submission_metric_secs:{qtau_submission_end_time - qtau_submission_start_time}")
+        return qtau
 
     def __get_cluster_manager(self, execution_engine, working_directory):
         if execution_engine == ExecutionEngine.DASK:
@@ -224,41 +224,41 @@ class PilotComputeService(PilotComputeBase):
             # job_id = f"ray-{uuid.uuid1()}"
             return ray_cluster_manager.RayManager(working_directory)  # Replace with appropriate manager
 
-        self.logger.error(f"Invalid Pilot Compute Description: invalid type: {execution_engine}")
-        raise PilotAPIException(f"Invalid Pilot Compute Description: invalid type: {execution_engine}")
+        self.logger.error(f"Invalid QTau Compute Description: invalid type: {execution_engine}")
+        raise QTauAPIException(f"Invalid QTau Compute Description: invalid type: {execution_engine}")
 
     def get_client(self):
         return self.cluster_manager.get_client()
 
-    def get_pilots(self):
-        return list(self.pilots.keys())
+    def get_qtaus(self):
+        return list(self.qtaus.keys())
     
-    def get_pilot(self, name):
-        if name not in self.pilots:
-            raise PilotAPIException(f"Pilot {name} not found")
+    def get_qtau(self, name):
+        if name not in self.qtaus:
+            raise QTauAPIException(f"QTau {name} not found")
         
-        return self.pilots[name]
+        return self.qtaus[name]
 
     def cancel(self):
-        """Cancel the PilotComputeService.
+        """Cancel the QTauComputeService.
 
-        This also cancels all the PilotJobs under the control of this PJS.
+        This also cancels all the QTauJobs under the control of this PJS.
 
         Returns:
         Result of the operation.
         """
-        self.logger.info("Cancelling PilotComputeService.")
+        self.logger.info("Cancelling QTauComputeService.")
         self.cluster_manager.cancel()
         self.logger.info("Terminating scheduler ....")
 
-        for pilot_name, pilot in self.pilots.items():
-            self.logger.info(f"Terminating pilot {pilot_name} ....")
-            pilot.cancel()    
+        for qtau_name, qtau in self.qtaus.items():
+            self.logger.info(f"Terminating qtau {qtau_name} ....")
+            qtau.cancel()    
 
 
 
 
-class PilotCompute(PilotComputeBase):
+class QTauCompute(QTauComputeBase):
     def __init__(self, batch_job=None, cluster_manager=None):
         super().__init__(cluster_manager.execution_engine, cluster_manager.working_directory)
         self.batch_job = batch_job
@@ -273,7 +273,7 @@ class PilotCompute(PilotComputeBase):
 
     def get_state(self):
         """
-        Get the state of the PilotCompute.
+        Get the state of the QTauCompute.
         """
         if self.batch_job:
             return self.batch_job.get_state()
@@ -286,7 +286,7 @@ class PilotCompute(PilotComputeBase):
 
     def get_client(self):
         """
-        Returns the native client for interacting with the task execution engine (i.e. Dask or Ray) started via the Pilot-Job.
+        Returns the native client for interacting with the task execution engine (i.e. Dask or Ray) started via the QTau-Job.
         see also get_context()
         """
         return self.cluster_manager.get_client()
@@ -300,11 +300,11 @@ class PilotCompute(PilotComputeBase):
 
     def get_context(self, configuration=None):
         """
-        Returns the context for interacting with the task execution engine (i.e. Dask or Ray) started via the Pilot-Job.
+        Returns the context for interacting with the task execution engine (i.e. Dask or Ray) started via the QTau-Job.
         """
         return self.cluster_manager.get_context(configuration)
 
-class PilotFuture:
+class QTauFuture:
     def __init__(self, future: Future):
         self._future = future
 
@@ -333,6 +333,6 @@ class PilotFuture:
         self._future.release()
 
     def __repr__(self):
-        return f"PilotFuture({self._future})"
+        return f"QTauFuture({self._future})"
 
 

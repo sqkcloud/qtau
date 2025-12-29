@@ -27,14 +27,14 @@ class Service(object):
             ec2+ssh://<EC2 Endpoint>
             euca+ssh://<EUCA Endpoint>
     """
-    def __init__(self, resource_url, pilot_compute_description=None):
+    def __init__(self, resource_url, qtau_compute_description=None):
         """Constructor"""
         self.resource_url = resource_url
-        self.pilot_compute_description = pilot_compute_description
+        self.qtau_compute_description = qtau_compute_description
 
 
     def create_job(self, job_description):
-        j = Job(job_description, self.resource_url, self.pilot_compute_description)
+        j = Job(job_description, self.resource_url, self.qtau_compute_description)
         return j
 
 
@@ -54,26 +54,26 @@ class Job(object):
         or 2) certificate validation needs to be disabled.
     """
 
-    def __init__(self, job_description, resource_url, pilot_compute_description):
+    def __init__(self, job_description, resource_url, qtau_compute_description):
 
         self.job_description = job_description
         logger.debug("URL: " + str(resource_url) + " Type: " + str(type(resource_url)))
         self.resource_url = saga.Url(str(resource_url))
-        self.pilot_compute_description = pilot_compute_description
+        self.qtau_compute_description = qtau_compute_description
 
         self.id="qtau-ec2" + str(uuid.uuid1())
         self.subprocess_handle=None
         self.job_timestamp=datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        self.job_output = open("pilotquantum_agent_ec2_output_"+self.job_timestamp+".log", "w")
-        self.job_error = open("pilotquantum_agent_ec2_output__agent_error_"+self.job_timestamp+".log", "w")
+        self.job_output = open("qtauquantum_agent_ec2_output_"+self.job_timestamp+".log", "w")
+        self.job_error = open("qtauquantum_agent_ec2_output__agent_error_"+self.job_timestamp+".log", "w")
 
 
     def run(self):
         """ Start VMs"""
         # Submit job
         working_directory = os.getcwd()
-        if "working_directory" in self.pilot_compute_description:
-            working_directory=self.pilot_compute_description["working_directory"]
+        if "working_directory" in self.qtau_compute_description:
+            working_directory=self.qtau_compute_description["working_directory"]
 
         TRIAL_MAX=3
         trials=0

@@ -1,7 +1,7 @@
 import math
 import os
 import ray
-from qtau.pilot_compute_service import ExecutionEngine, PilotComputeService
+from qtau.qtau_compute_service import ExecutionEngine, QTauComputeService
 from time import sleep
 import time
 import csv
@@ -10,7 +10,7 @@ RESOURCE_URL_HPC = "slurm://localhost"
 WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
 
 
-pilot_compute_description_ray = {
+qtau_compute_description_ray = {
     "resource": RESOURCE_URL_HPC,
     "working_directory": WORKING_DIRECTORY,
     "type": "ray",
@@ -20,13 +20,13 @@ pilot_compute_description_ray = {
     "walltime": 60,
     "project": "m4408",
     "scheduler_script_commands": ["#SBATCH --constraint=cpu"],
-    "name": "cpu_pilot"
+    "name": "cpu_qtau"
 }
 
 
-def start_pilot():
-    pcs = PilotComputeService(execution_engine=ExecutionEngine.RAY, working_directory=WORKING_DIRECTORY)
-    pcs.create_pilot(pilot_compute_description=pilot_compute_description_ray)
+def start_qtau():
+    pcs = QTauComputeService(execution_engine=ExecutionEngine.RAY, working_directory=WORKING_DIRECTORY)
+    pcs.create_qtau(qtau_compute_description=qtau_compute_description_ray)
     return pcs
 
 
@@ -41,21 +41,21 @@ def sleep(num=0):
 if __name__ == "__main__":
     pcs = None
     try:
-        # Start Pilot
+        # Start QTau
         start_time = time.time()
-        pcs = start_pilot()
+        pcs = start_qtau()
         end_time = time.time()
-        startup_csv = "pilot_startup_times.csv"
+        startup_csv = "qtau_startup_times.csv"
         with open(startup_csv, 'a', newline='') as csvfile:
             writer = csv.writer(csvfile)
             if csvfile.tell() == 0:  # Write header if file is empty
                 writer.writerow(['Startup Time (s)', 'Nodes', 'Cores per Node', 'Timestamp'])
             startup_time = end_time - start_time
-            print(f"Pilot startup time: {startup_time:.2f}s with {pilot_compute_description_ray['number_of_nodes']} nodes and {pilot_compute_description_ray['cores_per_node']} cores per node")
+            print(f"QTau startup time: {startup_time:.2f}s with {qtau_compute_description_ray['number_of_nodes']} nodes and {qtau_compute_description_ray['cores_per_node']} cores per node")
             writer.writerow([
                 f"{startup_time:.2f}",
-                pilot_compute_description_ray['number_of_nodes'],
-                pilot_compute_description_ray['cores_per_node'],
+                qtau_compute_description_ray['number_of_nodes'],
+                qtau_compute_description_ray['cores_per_node'],
                 time.strftime('%Y-%m-%d %H:%M:%S')
             ])
         
@@ -65,7 +65,7 @@ if __name__ == "__main__":
             
 
         # Create/open CSV file for writing results
-        csv_filename = f"ray_benchmark_results_{pilot_compute_description_ray['number_of_nodes']}nodes_{pilot_compute_description_ray['cores_per_node']}cores.csv"
+        csv_filename = f"ray_benchmark_results_{qtau_compute_description_ray['number_of_nodes']}nodes_{qtau_compute_description_ray['cores_per_node']}cores.csv"
         with open(csv_filename, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(['Task Size', 'Duration (s)', 'Throughput (tasks/s)', 'Nodes', 'Cores per Node', 'Timestamp'])
@@ -91,8 +91,8 @@ if __name__ == "__main__":
                         size, 
                         f"{duration:.2f}", 
                         f"{throughput:.2f}",
-                        pilot_compute_description_ray['number_of_nodes'],
-                        pilot_compute_description_ray['cores_per_node'],
+                        qtau_compute_description_ray['number_of_nodes'],
+                        qtau_compute_description_ray['cores_per_node'],
                         time.strftime('%Y-%m-%d %H:%M:%S')
                     ])
 

@@ -6,5 +6,5 @@ class ExecutionEngine(Enum):
     DASK = "dask"
     RAY = "ray"
 
-class PilotAPIException(Exception):
+class QTauAPIException(Exception):
     pass    

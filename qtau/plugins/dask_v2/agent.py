@@ -6,7 +6,7 @@ import subprocess
 import time
 from optparse import OptionParser
 
-from qtau.plugins.pilot_agent_base import PilotAgent
+from qtau.plugins.qtau_agent_base import QTauAgent
 from qtau.util.ssh_utils import execute_local_process, execute_ssh_command, get_localhost
 
 STOP=False
@@ -25,7 +25,7 @@ def handle_signals():
     signal.signal(signal.SIGTERM, handler)
 
 
-class DaskPilotAgent(PilotAgent):
+class DaskQTauAgent(QTauAgent):
 
     def __init__(self, working_directory, scheduler_file_path, worker_config_file, worker_name):
         super().__init__(working_directory, scheduler_file_path, worker_config_file, worker_name)
@@ -81,7 +81,7 @@ if __name__ == "__main__" :
     parser.add_option("-s", "--start", action="store_true", dest="start",
                   help="start Dask worker", default=True)
     
-    parser.add_option("-w", "--pilot-working-directory", type="string", action="store", dest="pilot_working_directory", default="/Users/pmantha/work/pcs-2cebd082-52f0-4cf3-af71-2a89b82dcfd3/Dask-f028ab1e-6d50-11ef-af5b-d2b91fefeab3", help="Working directory to execute agent in")
+    parser.add_option("-w", "--qtau-working-directory", type="string", action="store", dest="qtau_working_directory", default="/Users/pmantha/work/pcs-2cebd082-52f0-4cf3-af71-2a89b82dcfd3/Dask-f028ab1e-6d50-11ef-af5b-d2b91fefeab3", help="Working directory to execute agent in")
 
     parser.add_option("-f", "--scheduler-file", type="string", action="store", dest="scheduler_file", default="/Users/pmantha/work/pcs-2cebd082-52f0-4cf3-af71-2a89b82dcfd3/scheduler", help="Scheduler information file path")
         
@@ -95,7 +95,7 @@ if __name__ == "__main__" :
     (options, args) = parser.parse_args()
   
     # Initialize object for managing Dask clusters
-    dask_agent = DaskPilotAgent(options.pilot_working_directory, 
+    dask_agent = DaskQTauAgent(options.qtau_working_directory, 
                                  options.scheduler_file, 
                                  options.worker_config_file, options.worker_name)
      

@@ -1,14 +1,14 @@
 import os
 
-from qtau.pilot_enums_exceptions import ExecutionEngine
+from qtau.qtau_enums_exceptions import ExecutionEngine
 import time
 
-from qtau.pilot_compute_service import PilotComputeService
+from qtau.qtau_compute_service import QTauComputeService
 
 RESOURCE_URL_HPC = "slurm://localhost"
 WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
 
-pilot_compute_description_ray_cpu = {
+qtau_compute_description_ray_cpu = {
     "resource": RESOURCE_URL_HPC,
     "working_directory": WORKING_DIRECTORY,
     "number_of_nodes": 2,
@@ -21,9 +21,9 @@ pilot_compute_description_ray_cpu = {
     "scheduler_script_commands": ["#SBATCH --constraint=cpu"]
 }
 
-def start_pilot():
-    pcs = PilotComputeService(execution_engine=ExecutionEngine.RAY, working_directory=WORKING_DIRECTORY)
-    pcs.create_pilot(pilot_compute_description=pilot_compute_description_ray_cpu)
+def start_qtau():
+    pcs = QTauComputeService(execution_engine=ExecutionEngine.RAY, working_directory=WORKING_DIRECTORY)
+    pcs.create_qtau(qtau_compute_description=qtau_compute_description_ray_cpu)
     return pcs
 
 def sleep(timeSecs):
@@ -32,8 +32,8 @@ def sleep(timeSecs):
 if __name__ == "__main__":
     pcs = None
     try:
-        # Start Pilot
-        pcs = start_pilot()
+        # Start QTau
+        pcs = start_qtau()
         
         tasks = []
         for i in range(10):

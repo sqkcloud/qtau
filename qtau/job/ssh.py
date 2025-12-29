@@ -10,7 +10,7 @@ import uuid
 import pprint
 from urllib.parse import urlparse
 
-from qtau.pcs_logger import PilotComputeServiceLogger
+from qtau.pcs_logger import QTauComputeServiceLogger
 
 
 class State:
@@ -30,15 +30,15 @@ class Service(object):
 
     """
 
-    def __init__(self, resource_url, pilot_compute_description=None):
+    def __init__(self, resource_url, qtau_compute_description=None):
         """Constructor"""
         self.resource_url = resource_url
-        self.pilot_compute_description = pilot_compute_description
+        self.qtau_compute_description = qtau_compute_description
 
     def create_job(self, job_description):
-        if "pilot_compute_description" in job_description:
-            self.pilot_compute_description = job_description["pilot_compute_description"]
-        j = Job(job_description, self.resource_url, self.pilot_compute_description)
+        if "qtau_compute_description" in job_description:
+            self.qtau_compute_description = job_description["qtau_compute_description"]
+        j = Job(job_description, self.resource_url, self.qtau_compute_description)
         return j
 
     def __del__(self):
@@ -50,10 +50,10 @@ class Job(object):
 
     """
 
-    def __init__(self, job_description, resource_url, pilot_compute_description):
+    def __init__(self, job_description, resource_url, qtau_compute_description):
         self.resource_url = resource_url
         self.job_description = job_description
-        self.pilot_compute_description = job_description
+        self.qtau_compute_description = job_description
         self.working_directory = os.getcwd()
 
         if "working_directory" in self.job_description:
@@ -63,7 +63,7 @@ class Job(object):
             except:
                 pass
 
-        self.logger = PilotComputeServiceLogger(self.working_directory)
+        self.logger = QTauComputeServiceLogger(self.working_directory)
         self.logger.info(f"Working_directory {self.working_directory}, Job Description: {self.job_description}")
         self.host = urlparse(resource_url).hostname
         self.user = None
@@ -182,14 +182,14 @@ class Job(object):
             command = "ssh -o 'StrictHostKeyChecking=no' -l %s %s -t \"cd %s && bash -ic '%s %s'\"" % \
                       (self.user, self.host,
                       self.working_directory,
-                       str(self.pilot_compute_description["executable"]),
-                       " ".join(self.pilot_compute_description["arguments"]))
+                       str(self.qtau_compute_description["executable"]),
+                       " ".join(self.qtau_compute_description["arguments"]))
         else:
             command = "ssh -o 'StrictHostKeyChecking=no'  %s -t \"cd %s && bash -ic '%s %s'\"" % \
                       (self.host,
                        self.working_directory,
-                       str(self.pilot_compute_description["executable"]),
-                       " ".join(self.pilot_compute_description["arguments"]))
+                       str(self.qtau_compute_description["executable"]),
+                       " ".join(self.qtau_compute_description["arguments"]))
 
         self.logger.info("Execute SSH Command: {0}".format(command))
         # status = subprocess.call(command, shell=True)

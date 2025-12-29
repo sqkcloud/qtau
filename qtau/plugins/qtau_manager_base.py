@@ -6,94 +6,94 @@ import os
 
 import qtau
 from qtau.job import slurm, ssh
-from qtau.pcs_logger import PilotComputeServiceLogger
+from qtau.pcs_logger import QTauComputeServiceLogger
 
 
-class PilotManager:
+class QTauManager:
     def __init__(self, working_directory, execution_engine):
         self.working_directory = working_directory
         self.execution_engine = execution_engine
-        self.logger = PilotComputeServiceLogger(self.working_directory)
+        self.logger = QTauComputeServiceLogger(self.working_directory)
         self.scheduler_info_file=f'{self.working_directory}/scheduler'
         self.worker_config_file=f'{self.working_directory}/worker_config.json'        
         self.execution_engine = execution_engine
-        self.pilot_job = None
+        self.qtau_job = None
         
     def create_worker_config_file(self):
         pass
 
     def get_id(self):
-        return self.pilot_id
+        return self.qtau_id
 
     def start_scheduler(self):
         pass
 
-    def create_pilot(self):
+    def create_qtau(self):
         pass
 
-    def submit_pilot(self, pilot_compute_description):
-        self._setup_pilot_job(pilot_compute_description)
+    def submit_qtau(self, qtau_compute_description):
+        self._setup_qtau_job(qtau_compute_description)
 
         try:
             
-            pilot_js, pilot_jd = self._setup_pilot_saga_job(self.pilot_compute_description)
-            self.pilot_job = pilot_js.create_job(pilot_jd)
-            self.pilot_job.run()
-            self.pilot_job_id = self.pilot_job.get_id()
-            self.logger.info(f"Job submitted with id: {self.pilot_job_id} and state: {self.pilot_job.get_state()}")
-            return self.pilot_job
+            qtau_js, qtau_jd = self._setup_qtau_saga_job(self.qtau_compute_description)
+            self.qtau_job = qtau_js.create_job(qtau_jd)
+            self.qtau_job.run()
+            self.qtau_job_id = self.qtau_job.get_id()
+            self.logger.info(f"Job submitted with id: {self.qtau_job_id} and state: {self.qtau_job.get_state()}")
+            return self.qtau_job
         except Exception as ex:
-            self.logger.error(f"Pilot job submission failed: {str(ex)}")
+            self.logger.error(f"QTau job submission failed: {str(ex)}")
             raise ex
 
-    def _setup_pilot_job(self, pilot_compute_description):
-        self.pilot_compute_description = pilot_compute_description
-        self.pilot_id = self.execution_engine.name + "-" + uuid.uuid1().__str__()
-        self.pilot_working_directory = os.path.join(self.working_directory, self.pilot_id)
-        self.pilot_compute_description["working_directory"] = self.pilot_working_directory
+    def _setup_qtau_job(self, qtau_compute_description):
+        self.qtau_compute_description = qtau_compute_description
+        self.qtau_id = self.execution_engine.name + "-" + uuid.uuid1().__str__()
+        self.qtau_working_directory = os.path.join(self.working_directory, self.qtau_id)
+        self.qtau_compute_description["working_directory"] = self.qtau_working_directory
         self.create_worker_config_file()
         
         try:
-            self.logger.info(f"Creating working directory: {self.pilot_working_directory}")
-            os.makedirs(self.pilot_working_directory)
+            self.logger.info(f"Creating working directory: {self.qtau_working_directory}")
+            os.makedirs(self.qtau_working_directory)
         except Exception:
-            self.logger.error(f"Failed to create working directory: {self.pilot_working_directory}")
+            self.logger.error(f"Failed to create working directory: {self.qtau_working_directory}")
         
 
         
     def wait(self):
-        state = self.pilot_job.get_state().lower()        
+        state = self.qtau_job.get_state().lower()        
         while state != "running" and state != "done":
-            self.logger.debug(f"Pilot Job {self.pilot_job_id} State {state}")            
+            self.logger.debug(f"QTau Job {self.qtau_job_id} State {state}")            
             time.sleep(6)
-            state = self.pilot_job.get_state().lower()
+            state = self.qtau_job.get_state().lower()
         
 
     def get_config_data(self):
         pass
                     
 
-    def get_pilot_status(self):
+    def get_qtau_status(self):
         pass
 
     def cancel(self):
-        if self.pilot_job:
-            self.pilot_job.cancel()
+        if self.qtau_job:
+            self.qtau_job.cancel()
 
         time.sleep(2)
 
-    def _setup_pilot_saga_job(self, pilot_compute_description):
-        resource_url = pilot_compute_description["resource"]
+    def _setup_qtau_saga_job(self, qtau_compute_description):
+        resource_url = qtau_compute_description["resource"]
         url_scheme = urlparse(resource_url).scheme
 
         js = self._get_saga_job_service(resource_url, url_scheme)
         
-        executable = self._get_pilot_saga_job_executable()
+        executable = self._get_qtau_saga_job_executable()
         arguments = self._get_saga_job_arguments()                
-        self.logger.debug(f"Launching pilot with {executable} and arguments: {arguments}")
+        self.logger.debug(f"Launching qtau with {executable} and arguments: {arguments}")
 
         jd = {"executable": executable, "arguments": arguments}
-        jd.update(pilot_compute_description)
+        jd.update(qtau_compute_description)
 
         return js, jd
 
@@ -104,7 +104,7 @@ class PilotManager:
             js = ssh.Service(resource_url)
         return js
     
-    def _get_pilot_saga_job_executable(self):
+    def _get_qtau_saga_job_executable(self):
         return "python"
         
     def _stop_existing_processes(self, process_name):

@@ -1,9 +1,9 @@
-# QTAU
+# QTau
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 
-**QTAU** (Quantum Task Automation Utility) is a Quantum-HPC middleware framework designed to address the challenges of integrating quantum and classical computing resources. It provides a unified interface for managing heterogeneous resources, including diverse Quantum Processing Unit (QPU) modalities and various integration types with classical HPC systems.
+**QTau** (Quantum Task Automation Utility) is a Quantum-HPC middleware framework designed to address the challenges of integrating quantum and classical computing resources. It provides a unified interface for managing heterogeneous resources, including diverse Quantum Processing Unit (QPU) modalities and various integration types with classical HPC systems.
 
 ## Features
 
@@ -28,7 +28,7 @@ Requirement (in case a manual installation is required):
 
     pip install -r requirements.txt
 
-To install QTAU type:
+To install QTau type:
 
     python setup.py install
 
@@ -38,21 +38,21 @@ To install QTAU type:
 
 ```python
 import os
-from qtau.pilot_compute_service import PilotComputeService
-from qtau.pilot_enums_exceptions import ExecutionEngine
+from qtau.qtau_compute_service import QTauComputeService
+from qtau.qtau_enums_exceptions import ExecutionEngine
 
 WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
 
-# Define pilot configuration
-pilot_description = {
+# Define qtau configuration
+qtau_description = {
     "resource": "ssh://localhost",
     "number_of_nodes": 2,
     "cores_per_node": 4,
 }
 
-# Initialize PilotComputeService with Dask backend
-pcs = PilotComputeService(ExecutionEngine.DASK, WORKING_DIRECTORY)
-pcs.create_pilot(pilot_compute_description=pilot_description)
+# Initialize QTauComputeService with Dask backend
+pcs = QTauComputeService(ExecutionEngine.DASK, WORKING_DIRECTORY)
+pcs.create_qtau(qtau_compute_description=qtau_description)
 
 # Define a simple task
 def compute_square(x):
@@ -76,23 +76,23 @@ finally:
 
 ```python
 import os
-from qtau.pilot_compute_service import PilotComputeService
-from qtau.pilot_enums_exceptions import ExecutionEngine
+from qtau.qtau_compute_service import QTauComputeService
+from qtau.qtau_enums_exceptions import ExecutionEngine
 
 WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
 
-pilot_description = {
+qtau_description = {
     "resource": "ssh://localhost",
     "number_of_nodes": 2,
     "cores_per_node": 8,
 }
 
 # Initialize with Ray execution engine
-pcs = PilotComputeService(
+pcs = QTauComputeService(
     execution_engine=ExecutionEngine.RAY,
     working_directory=WORKING_DIRECTORY
 )
-pcs.create_pilot(pilot_compute_description=pilot_description)
+pcs.create_qtau(qtau_compute_description=qtau_description)
 
 def heavy_computation(data):
     # Simulate CPU-intensive task
@@ -121,12 +121,12 @@ finally:
 ```python
 import os
 import pennylane as qml
-from qtau.pilot_compute_service import PilotComputeService
-from qtau.pilot_enums_exceptions import ExecutionEngine
+from qtau.qtau_compute_service import QTauComputeService
+from qtau.qtau_enums_exceptions import ExecutionEngine
 
 WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
 
-pilot_description = {
+qtau_description = {
     "resource": "ssh://localhost",
     "number_of_nodes": 2,
     "cores_per_node": 10,
@@ -147,8 +147,8 @@ def pennylane_quantum_circuit():
     return circuit(weights)
 
 # Initialize service
-pcs = PilotComputeService(ExecutionEngine.DASK, WORKING_DIRECTORY)
-pcs.create_pilot(pilot_compute_description=pilot_description)
+pcs = QTauComputeService(ExecutionEngine.DASK, WORKING_DIRECTORY)
+pcs.create_qtau(qtau_compute_description=qtau_description)
 
 try:
     # Submit quantum circuit tasks with custom names
@@ -167,16 +167,16 @@ finally:
     pcs.cancel()
 ```
 
-### Example 4: Multi-Pilot Deployment
+### Example 4: Multi-QTau Deployment
 
 ```python
 import os
-from qtau.pilot_compute_service import PilotComputeService
-from qtau.pilot_enums_exceptions import ExecutionEngine
+from qtau.qtau_compute_service import QTauComputeService
+from qtau.qtau_enums_exceptions import ExecutionEngine
 
 WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
 
-pilot_description = {
+qtau_description = {
     "resource": "ssh://localhost",
     "number_of_nodes": 2,
     "cores_per_node": 10,
@@ -186,32 +186,32 @@ def process_data(x):
     return x * 2
 
 # Initialize service
-pcs = PilotComputeService(ExecutionEngine.DASK, WORKING_DIRECTORY)
+pcs = QTauComputeService(ExecutionEngine.DASK, WORKING_DIRECTORY)
 
-# Create multiple pilots
+# Create multiple qtaus
 for i in range(2):
-    pilot_description["name"] = f"pilot-{i}"
-    pcs.create_pilot(pilot_compute_description=pilot_description)
+    qtau_description["name"] = f"qtau-{i}"
+    pcs.create_qtau(qtau_compute_description=qtau_description)
 
 try:
-    # Get list of available pilots
-    pilots = pcs.get_pilots()
-    print(f"Available pilots: {pilots}")
+    # Get list of available qtaus
+    qtaus = pcs.get_qtaus()
+    print(f"Available qtaus: {qtaus}")
 
     tasks = []
 
-    # Submit tasks to any available pilot
+    # Submit tasks to any available qtau
     for i in range(10):
         task = pcs.submit_task(process_data, i, task_name=f"general_task_{i}")
         tasks.append(task)
 
-    # Submit tasks to a specific pilot
+    # Submit tasks to a specific qtau
     for i in range(10):
         task = pcs.submit_task(
             process_data,
             i,
-            task_name=f"pilot0_task_{i}",
-            pilot=pilots[0]  # Route to specific pilot
+            task_name=f"qtau0_task_{i}",
+            qtau=qtaus[0]  # Route to specific qtau
         )
         tasks.append(task)
 
@@ -226,13 +226,13 @@ finally:
 
 ```python
 import os
-from qtau.pilot_compute_service import PilotComputeService
-from qtau.pilot_enums_exceptions import ExecutionEngine
+from qtau.qtau_compute_service import QTauComputeService
+from qtau.qtau_enums_exceptions import ExecutionEngine
 
 WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
 
 # SLURM configuration for HPC cluster
-pilot_description = {
+qtau_description = {
     "resource": "slurm://localhost",
     "working_directory": WORKING_DIRECTORY,
     "number_of_nodes": 4,
@@ -250,13 +250,13 @@ pilot_description = {
     ]
 }
 
-pcs = PilotComputeService(
+pcs = QTauComputeService(
     execution_engine=ExecutionEngine.RAY,
     working_directory=WORKING_DIRECTORY
 )
 
-pilot = pcs.create_pilot(pilot_compute_description=pilot_description)
-pilot.wait()  # Wait for SLURM job to start
+qtau = pcs.create_qtau(qtau_compute_description=qtau_description)
+qtau.wait()  # Wait for SLURM job to start
 
 try:
     # Submit GPU-accelerated tasks
@@ -279,13 +279,13 @@ finally:
 
 ```python
 import os
-from qtau.pilot_compute_service import PilotComputeService
-from qtau.pilot_enums_exceptions import ExecutionEngine
+from qtau.qtau_compute_service import QTauComputeService
+from qtau.qtau_enums_exceptions import ExecutionEngine
 
 WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
 
-pcs = PilotComputeService(ExecutionEngine.RAY, WORKING_DIRECTORY)
-pcs.create_pilot(pilot_compute_description={
+pcs = QTauComputeService(ExecutionEngine.RAY, WORKING_DIRECTORY)
+pcs.create_qtau(qtau_compute_description={
     "resource": "slurm://localhost",
     "number_of_nodes": 4,
     "cores_per_node": 32,
@@ -310,13 +310,13 @@ finally:
 
 ```python
 import os
-from qtau.pilot_compute_service import PilotComputeService
-from qtau.pilot_enums_exceptions import ExecutionEngine
+from qtau.qtau_compute_service import QTauComputeService
+from qtau.qtau_enums_exceptions import ExecutionEngine
 
 WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
 
-pcs = PilotComputeService(ExecutionEngine.DASK, WORKING_DIRECTORY)
-pcs.create_pilot(pilot_compute_description={
+pcs = QTauComputeService(ExecutionEngine.DASK, WORKING_DIRECTORY)
+pcs.create_qtau(qtau_compute_description={
     "resource": "ssh://localhost",
     "number_of_nodes": 2,
     "cores_per_node": 4,
@@ -341,13 +341,13 @@ finally:
 ```python
 import os
 import ray
-from qtau.pilot_compute_service import PilotComputeService
-from qtau.pilot_enums_exceptions import ExecutionEngine
+from qtau.qtau_compute_service import QTauComputeService
+from qtau.qtau_enums_exceptions import ExecutionEngine
 
 WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
 
-pcs = PilotComputeService(ExecutionEngine.RAY, WORKING_DIRECTORY)
-pcs.create_pilot(pilot_compute_description={
+pcs = QTauComputeService(ExecutionEngine.RAY, WORKING_DIRECTORY)
+pcs.create_qtau(qtau_compute_description={
     "resource": "ssh://localhost",
     "number_of_nodes": 2,
     "cores_per_node": 4,
@@ -370,12 +370,12 @@ finally:
 
 ## Configuration Reference
 
-### Pilot Description Parameters
+### QTau Description Parameters
 
 | Parameter | Description | Example |
 |-----------|-------------|---------|
 | `resource` | Resource URL for job submission | `ssh://localhost`, `slurm://localhost` |
-| `name` | Pilot identifier (auto-generated if not provided) | `pilot-0` |
+| `name` | QTau identifier (auto-generated if not provided) | `qtau-0` |
 | `number_of_nodes` | Number of compute nodes | `2` |
 | `cores_per_node` | CPU cores per node | `4` |
 | `gpus_per_node` | GPUs per node (optional) | `1` |
@@ -399,8 +399,8 @@ finally:
 ```
 qtau/
 ├── qtau/                          # Main package
-│   ├── pilot_compute_service.py   # Core service API
-│   ├── pilot_enums_exceptions.py  # Enums and exceptions
+│   ├── qtau_compute_service.py   # Core service API
+│   ├── qtau_enums_exceptions.py  # Enums and exceptions
 │   ├── pcs_logger.py              # Logging system
 │   ├── job/                       # Job submission modules
 │   │   ├── slurm.py               # SLURM integration
@@ -418,12 +418,12 @@ qtau/
 
 ## Metrics and Logging
 
-QTAU automatically tracks task execution metrics and writes them to `metrics.csv` in the working directory:
+QTau automatically tracks task execution metrics and writes them to `metrics.csv` in the working directory:
 
 | Metric | Description |
 |--------|-------------|
 | `task_id` | Unique task identifier |
-| `pilot_scheduled` | Pilot that executed the task |
+| `qtau_scheduled` | QTau that executed the task |
 | `submit_time` | Task submission timestamp |
 | `wait_time_secs` | Time waiting in queue |
 | `execution_secs` | Actual execution time |
@@ -434,7 +434,7 @@ Logs are written to `qtau.log` in the working directory.
 
 ## Hints
 
-Your default conda environment should contain all QTAU and application dependencies. Activate it, e.g., in the `.bashrc`
+Your default conda environment should contain all QTau and application dependencies. Activate it, e.g., in the `.bashrc`
 
 ## Dependencies
 
@@ -446,7 +446,7 @@ Your default conda environment should contain all QTAU and application dependenc
 
 ## License
 
-QTAU is released under the Apache 2.0 license. See LICENSE for more details.
+QTau is released under the Apache 2.0 license. See LICENSE for more details.
 
 ## Authors
 

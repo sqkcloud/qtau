@@ -7,13 +7,13 @@ from urllib.parse import urlparse
 
 import ray
 
-from qtau.pilot_enums_exceptions import ExecutionEngine
-from qtau.plugins.pilot_manager_base import PilotManager
+from qtau.qtau_enums_exceptions import ExecutionEngine
+from qtau.plugins.qtau_manager_base import QTauManager
 from qtau.util.ssh_utils import execute_ssh_command, execute_ssh_command_as_daemon, get_localhost
 import subprocess
 
 
-class RayManager(PilotManager):
+class RayManager(QTauManager):
     def __init__(self, working_directory):
         self.client = None
         super().__init__(working_directory=working_directory, execution_engine=ExecutionEngine.RAY)        
@@ -35,7 +35,7 @@ class RayManager(PilotManager):
     def start_scheduler(self):
         # Stop existing Ray processes
         self.stop_ray()
-        self._stop_existing_processes("pilot.plugins.ray_v2.agent")
+        self._stop_existing_processes("qtau.plugins.ray_v2.agent")
 
         # Start a new Ray scheduler in the background
         log_file = os.path.join(self.working_directory, 'ray_scheduler.log')
@@ -87,16 +87,16 @@ class RayManager(PilotManager):
         self.logger.info(f"Scheduler details written to {self.scheduler_info_file}")
         
 
-    def submit_pilot(self, pilot_compute_description):
-        return super().submit_pilot(pilot_compute_description)
+    def submit_qtau(self, qtau_compute_description):
+        return super().submit_qtau(qtau_compute_description)
 
     def _get_saga_job_arguments(self):
-        arguments = [ "-m", "pilot.plugins.ray_v2.agent",
+        arguments = [ "-m", "qtau.plugins.ray_v2.agent",
                      "-s", "True",
-                     "-w", self.pilot_working_directory,
+                     "-w", self.qtau_working_directory,
                      "-f", self.scheduler_info_file, 
                      "-c", self.worker_config_file, 
-                     "-n", self.pilot_compute_description.get("name", "pq-ray-worker"),                     
+                     "-n", self.qtau_compute_description.get("name", "pq-ray-worker"),                     
                      ]
                      
         
@@ -104,8 +104,8 @@ class RayManager(PilotManager):
 
     def create_worker_config_file(self):
         worker_config = {
-            'cores_per_node': str(self.pilot_compute_description.get("cores_per_node", "1")),
-            'gpus_per_node': str(self.pilot_compute_description.get("gpus_per_node", "1")),
+            'cores_per_node': str(self.qtau_compute_description.get("cores_per_node", "1")),
+            'gpus_per_node': str(self.qtau_compute_description.get("gpus_per_node", "1")),
         }
         with open(self.worker_config_file, 'w') as f:
             json.dump(worker_config, f)

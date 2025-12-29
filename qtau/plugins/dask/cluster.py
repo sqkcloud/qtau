@@ -17,10 +17,10 @@ import distributed
 import numpy as np
 from dask.distributed import Client, SSHCluster
 
-# Resource Managers supported by Dask Pilot-quantum Plugin
+# Resource Managers supported by Dask QTau-quantum Plugin
 import qtau.job.slurm
 import qtau.job.ssh
-from qtau.pcs_logger import PilotComputeServiceLogger
+from qtau.pcs_logger import QTauComputeServiceLogger
 
 from dask.distributed import Scheduler
 import psutil
@@ -39,10 +39,10 @@ class Manager:
         self.dask_cluster = None
         self.batch_job_id = None
         self.job = None
-        self.logger = PilotComputeServiceLogger(self.pcs_working_directory)
+        self.logger = QTauComputeServiceLogger(self.pcs_working_directory)
         self.dask_worker_type = None
         self.working_directory = None
-        self.pilot_compute_description = None
+        self.qtau_compute_description = None
         self.nodes = None
         self.dask_client = None
         self.job_id = job_id
@@ -111,44 +111,44 @@ class Manager:
         return self.scheduler_info_file
 
 
-    def _setup_job(self, pilot_compute_description):
-        resource_url = pilot_compute_description["resource"]
+    def _setup_job(self, qtau_compute_description):
+        resource_url = qtau_compute_description["resource"]
         url_scheme = urlparse(resource_url).scheme
 
         if url_scheme.startswith("slurm"):
-            js = pilot.job.slurm.Service(resource_url)
+            js = qtau.job.slurm.Service(resource_url)
         else:
-            js = pilot.job.ssh.Service(resource_url)
+            js = qtau.job.ssh.Service(resource_url)
         
         executable = "python"
-        arguments = ["-m", "pilot.plugins.dask.bootstrap_dask", "-t", self.dask_worker_type]
+        arguments = ["-m", "qtau.plugins.dask.bootstrap_dask", "-t", self.dask_worker_type]
         
-        arguments.extend(["-p", str(self.pilot_compute_description.get("cores_per_node", 1))])        
+        arguments.extend(["-p", str(self.qtau_compute_description.get("cores_per_node", 1))])        
         arguments.extend(["-s", "True"])
         arguments.extend(["-f", self.scheduler_info_file])
-        arguments.extend(["-n", self.pilot_compute_description['name']])
+        arguments.extend(["-n", self.qtau_compute_description['name']])
         
         self.logger.debug(f"Run {executable} Args: {arguments}")
 
         jd = {"executable": executable, "arguments": arguments}
-        jd.update(pilot_compute_description)
+        jd.update(qtau_compute_description)
 
         return js, jd
 
 
-    def submit_job(self, pilot_compute_description):
+    def submit_job(self, qtau_compute_description):
         try:
-            self.pilot_compute_description = pilot_compute_description
-            self.pilot_compute_description['working_directory'] = os.path.join(self.pcs_working_directory, self.job_id)
-            self.working_directory = self.pilot_compute_description['working_directory']
-            self.dask_worker_type = self.pilot_compute_description.get("type", "dask")
+            self.qtau_compute_description = qtau_compute_description
+            self.qtau_compute_description['working_directory'] = os.path.join(self.pcs_working_directory, self.job_id)
+            self.working_directory = self.qtau_compute_description['working_directory']
+            self.dask_worker_type = self.qtau_compute_description.get("type", "dask")
 
             try:
                 os.makedirs(self.working_directory)
             except Exception:
                 pass
 
-            job_service, job_description = self._setup_job(pilot_compute_description)
+            job_service, job_description = self._setup_job(qtau_compute_description)
 
             self.job = job_service.create_job(job_description)
             self.job.run()
@@ -172,8 +172,8 @@ class Manager:
     #     self.nodes = self.job.get_nodes_list()
     #     self.host = self.nodes[0]  # first node is master host - requires public ip to connect to
 
-    #     worker_options = {"nthreads": self.pilot_compute_description.get("cores_per_node", 1), 
-    #                       "n_workers": self.pilot_compute_description.get("number_of_nodes", 1),
+    #     worker_options = {"nthreads": self.qtau_compute_description.get("cores_per_node", 1), 
+    #                       "n_workers": self.qtau_compute_description.get("number_of_nodes", 1),
     #                       "memory_limit": '3GB'}
     #     hosts = list(np.append(self.nodes[0], self.nodes))
     #     self.dask_cluster = SSHCluster(hosts,
@@ -199,7 +199,7 @@ class Manager:
     #     self.logger.info(f"Starting Dask workers with scheduler address: {self.host}")
 
     #     #Start dask workers on all nodes in background and write the worker address to a file
-    #     command = f"dask worker --nworkers {self.pilot_compute_description.get('number_of_nodes',1)} --nthreads {self.pilot_compute_description.get('cores_per_node', 1)} --name {self.pilot_compute_description['name']} --memory-limit 3GB {self.host} &"
+    #     command = f"dask worker --nworkers {self.qtau_compute_description.get('number_of_nodes',1)} --nthreads {self.qtau_compute_description.get('cores_per_node', 1)} --name {self.qtau_compute_description['name']} --memory-limit 3GB {self.host} &"
     #     self.logger.info(f"Starting worker with command: {command}")
     #     subprocess.Popen(command, shell=True)
 
@@ -238,7 +238,7 @@ class Manager:
             time.sleep(6)
 
     def cancel(self):
-        # Stop the pilot jobs if any
+        # Stop the qtau jobs if any
         if self.job:
             self.job.cancel()
 

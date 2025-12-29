@@ -1,6 +1,6 @@
-"""Tests for qtau.pilot_enums_exceptions module."""
+"""Tests for qtau.qtau_enums_exceptions module."""
 import pytest
-from qtau.pilot_enums_exceptions import ExecutionEngine, PilotAPIException
+from qtau.qtau_enums_exceptions import ExecutionEngine, QTauAPIException
 
 
 class TestExecutionEngine:
@@ -27,27 +27,27 @@ class TestExecutionEngine:
         assert ExecutionEngine.RAY.name == "RAY"
 
 
-class TestPilotAPIException:
-    """Tests for PilotAPIException."""
+class TestQTauAPIException:
+    """Tests for QTauAPIException."""
 
     def test_exception_is_exception_subclass(self):
-        """Test that PilotAPIException is a subclass of Exception."""
-        assert issubclass(PilotAPIException, Exception)
+        """Test that QTauAPIException is a subclass of Exception."""
+        assert issubclass(QTauAPIException, Exception)
 
     def test_exception_can_be_raised(self):
-        """Test that PilotAPIException can be raised and caught."""
-        with pytest.raises(PilotAPIException):
-            raise PilotAPIException("Test error message")
+        """Test that QTauAPIException can be raised and caught."""
+        with pytest.raises(QTauAPIException):
+            raise QTauAPIException("Test error message")
 
     def test_exception_message(self):
         """Test that exception message is preserved."""
         message = "Custom error message"
         try:
-            raise PilotAPIException(message)
-        except PilotAPIException as e:
+            raise QTauAPIException(message)
+        except QTauAPIException as e:
             assert str(e) == message
 
     def test_exception_empty_message(self):
         """Test that exception can be raised with empty message."""
-        with pytest.raises(PilotAPIException):
-            raise PilotAPIException()
+        with pytest.raises(QTauAPIException):
+            raise QTauAPIException()

@@ -1,13 +1,13 @@
 import os
 
 import pennylane as qml
-from qtau.pilot_compute_service import PilotComputeService
+from qtau.qtau_compute_service import QTauComputeService
 from time import sleep
 
 RESOURCE_URL_HPC = "slurm://localhost"
 WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
 
-pilot_compute_description_dask = {
+qtau_compute_description_dask = {
     "resource": RESOURCE_URL_HPC,
     "working_directory": WORKING_DIRECTORY,
     "type": "dask",
@@ -22,9 +22,9 @@ pilot_compute_description_dask = {
 }
 
 
-def start_pilot():
-    pcs = PilotComputeService()
-    dp = pcs.create_pilot(pilot_compute_description=pilot_compute_description_dask)
+def start_qtau():
+    pcs = QTauComputeService()
+    dp = pcs.create_qtau(qtau_compute_description=qtau_compute_description_dask)
     dp.wait()
     return dp
 
@@ -44,30 +44,30 @@ def pennylane_quantum_circuit():
 
 
 if __name__ == "__main__":
-    dask_pilot, dask_client = None, None
+    dask_qtau, dask_client = None, None
 
     try:
-        # Start Pilot
-        dask_pilot = start_pilot()
+        # Start QTau
+        dask_qtau = start_qtau()
 
         # Get Dask client details
-        dask_client = dask_pilot.get_client()
+        dask_client = dask_qtau.get_client()
         print(dask_client.scheduler_info())
 
         print("Start sleep 1 tasks")
         tasks = []
         for i in range(10):
-            k = dask_pilot.submit_task(f"task_sleep-{i}",sleep, 1)
+            k = dask_qtau.submit_task(f"task_sleep-{i}",sleep, 1)
             tasks.append(k)
 
-        dask_pilot.wait_tasks(tasks)
+        dask_qtau.wait_tasks(tasks)
         print("Start Pennylane tasks")
         tasks = []
         for i in range(10):
-            k = dask_pilot.submit_task(f"task_pennylane-{i}", pennylane_quantum_circuit)
+            k = dask_qtau.submit_task(f"task_pennylane-{i}", pennylane_quantum_circuit)
             tasks.append(k)
 
-        dask_pilot.wait_tasks(tasks)        
+        dask_qtau.wait_tasks(tasks)        
     finally:
-        if dask_pilot:
-            dask_pilot.cancel()
+        if dask_qtau:
+            dask_qtau.cancel()

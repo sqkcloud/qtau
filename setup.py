@@ -29,7 +29,7 @@ def update_version():
     f = open(fn, "w")
     f.write(str(ver))
     f.close()
-    print("QTAU VERSION: '%s'" % ver)
+    print("QTau VERSION: '%s'" % ver)
 
 
 def get_version():

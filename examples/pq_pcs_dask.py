@@ -1,13 +1,13 @@
 import os
 
 import pennylane as qml
-from qtau.pilot_compute_service import PilotComputeService
+from qtau.qtau_compute_service import QTauComputeService
 from time import sleep
 
 RESOURCE_URL_HPC = "ssh://localhost"
 WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
 
-pilot_compute_description_dask = {
+qtau_compute_description_dask = {
     "resource": RESOURCE_URL_HPC,
     "working_directory": WORKING_DIRECTORY,
     "type": "dask",
@@ -16,9 +16,9 @@ pilot_compute_description_dask = {
 }
 
 
-def start_pilot():
-    pcs = PilotComputeService(working_directory=WORKING_DIRECTORY)
-    pcs.create_pilot(pilot_compute_description=pilot_compute_description_dask)
+def start_qtau():
+    pcs = QTauComputeService(working_directory=WORKING_DIRECTORY)
+    pcs.create_qtau(qtau_compute_description=qtau_compute_description_dask)
     return pcs
 
 def pennylane_quantum_circuit():
@@ -38,8 +38,8 @@ def pennylane_quantum_circuit():
 
 if __name__ == "__main__":
     try:
-        # Start Pilot
-        pcs = start_pilot()
+        # Start QTau
+        pcs = start_qtau()
 
         tasks = []
         for i in range(10):

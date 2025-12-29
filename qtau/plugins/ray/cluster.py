@@ -18,7 +18,7 @@ import numpy as np
 logging.getLogger("tornado.application").setLevel(logging.CRITICAL)
 logging.getLogger("distributed.utils").setLevel(logging.CRITICAL)
 
-# Resource Managers supported by Dask Pilot-quantum Plugin
+# Resource Managers supported by Dask QTau-quantum Plugin
 import qtau.job.slurm
 import qtau.job.ssh
 from urllib.parse import urlparse
@@ -42,7 +42,7 @@ class Manager():
             os.makedirs(self.working_directory)
 
         self.start_agent_working_directory = working_directory
-        self.pilot_compute_description = None
+        self.qtau_compute_description = None
         self.job = None  # SAGA Job
         self.local_id = None  # Local Resource Manager ID (e.g. SLURM id)
         self.ray_process = None
@@ -51,9 +51,9 @@ class Manager():
         self.job_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
         # self.job_output = open(os.path.join(self.working_directory, 
-        #                                     self.job_timestamp + "_ray_pilot_agent_output.log"), "w")
+        #                                     self.job_timestamp + "_ray_qtau_agent_output.log"), "w")
         # self.job_error = open(os.path.join(self.working_directory, 
-        #                                    self.job_timestamp + "_ray_pilot_agent_error.log"), "w")
+        #                                    self.job_timestamp + "_ray_qtau_agent_error.log"), "w")
         
         try:
             os.makedirs(self.working_directory)
@@ -63,53 +63,53 @@ class Manager():
 
     def _configure_logging(self):
         logging.basicConfig(
-            filename=os.path.join(self.working_directory, "pilot_quantum_ray.log"),
+            filename=os.path.join(self.working_directory, "qtau_quantum_ray.log"),
             level=logging.DEBUG,
             format="%(asctime)s - %(levelname)s - %(message)s"
         )
     
-    def _setup_job(self, pilot_compute_description):
-        resource_url = pilot_compute_description["resource"]
+    def _setup_job(self, qtau_compute_description):
+        resource_url = qtau_compute_description["resource"]
 
         url_scheme = urlparse(resource_url).scheme
 
         if url_scheme.startswith("slurm"):
-            js = pilot.job.slurm.Service(resource_url)
+            js = qtau.job.slurm.Service(resource_url)
             executable = "python"
-            arguments = ["-m", "pilot.plugins.ray.bootstrap_ray",
+            arguments = ["-m", "qtau.plugins.ray.bootstrap_ray",
                          "-j", self.job_id]
-            if "cores_per_node" in pilot_compute_description:
+            if "cores_per_node" in qtau_compute_description:
                 arguments.append(" -p ")
-                arguments.append(str(pilot_compute_description["cores_per_node"]))
+                arguments.append(str(qtau_compute_description["cores_per_node"]))
             
-            if  "gpus_per_node" in pilot_compute_description:            
+            if  "gpus_per_node" in qtau_compute_description:            
                 arguments.append(" -g ")
-                arguments.append(str(pilot_compute_description["gpus_per_node"]))
+                arguments.append(str(qtau_compute_description["gpus_per_node"]))
             
-            if "working_directory" in pilot_compute_description:
+            if "working_directory" in qtau_compute_description:
                 arguments.append(" -w ")
-                arguments.append(str(pilot_compute_description["working_directory"]))
+                arguments.append(str(qtau_compute_description["working_directory"]))
             
             logging.debug("Run %s Args: %s" % (executable, str(arguments)))
         else:
-            js = pilot.job.ssh.Service(resource_url)
+            js = qtau.job.ssh.Service(resource_url)
             executable = "/bin/hostname"
             arguments = ""
 
         jd = {"executable": executable, "arguments": arguments}
-        jd.update(pilot_compute_description)
+        jd.update(qtau_compute_description)
 
         return js, jd
 
     # Ray 2.30.0
     def submit_job(self,
-                   pilot_compute_description=None
+                   qtau_compute_description=None
                    ):
-        # Start Pilot-Job via Job abstraction
+        # Start QTau-Job via Job abstraction
         try:
-            self.pilot_compute_description = pilot_compute_description
-            self.pilot_compute_description["working_directory"] = os.path.join(self.pilot_compute_description["working_directory"], self.job_id)
-            self.working_directory = self.pilot_compute_description["working_directory"]
+            self.qtau_compute_description = qtau_compute_description
+            self.qtau_compute_description["working_directory"] = os.path.join(self.qtau_compute_description["working_directory"], self.job_id)
+            self.working_directory = self.qtau_compute_description["working_directory"]
             try:
                 os.makedirs(self.working_directory)
             except:
@@ -117,7 +117,7 @@ class Manager():
 
             self._configure_logging()
 
-            job_service, job_description = self._setup_job(pilot_compute_description)
+            job_service, job_description = self._setup_job(qtau_compute_description)
 
             self.job = job_service.create_job(job_description)
             self.job.run()

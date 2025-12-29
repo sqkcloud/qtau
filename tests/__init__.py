@@ -1,1 +1,1 @@
-# QTAU Test Suite
+# QTau Test Suite

@@ -9,7 +9,7 @@ import time
 import uuid
 from urllib.parse import urlparse
 
-from qtau.pcs_logger import PilotComputeServiceLogger
+from qtau.pcs_logger import QTauComputeServiceLogger
 
 
 class Service(object):
@@ -33,7 +33,7 @@ class Job(object):
     def __init__(self, job_description, resource_url):
         self.job_description = job_description
         self.working_directory = self.job_description["working_directory"]
-        self.logger = PilotComputeServiceLogger(self.working_directory)
+        self.logger = QTauComputeServiceLogger(self.working_directory)
 
 
         self.command = self.job_description["executable"]
@@ -46,7 +46,7 @@ class Job(object):
         self.command = (("%s %s") % (self.job_description["executable"], args))
         self.logger.debug("Command: %s" % self.command)
 
-        # Pilot-quantum Internal UID
+        # QTau-quantum Internal UID
         self.job_uuid = str(uuid.uuid1())
         self.job_uuid_short = "pq-%s" % self.job_uuid[:5]
 
@@ -59,80 +59,80 @@ class Job(object):
         o = urlparse(self.resource_url)
         self.target_host = o.netloc
 
-        self.logger.debug("Pilot-Job SLURM: Parsing job description: %s" % str(job_description))
+        self.logger.debug("QTau-Job SLURM: Parsing job description: %s" % str(job_description))
 
-        self.pilot_compute_description = {}
+        self.qtau_compute_description = {}
         if 'queue' in job_description or job_description['queue'] is not None or job_description['queue'] != "None":
-            self.pilot_compute_description['queue'] = job_description['queue']
+            self.qtau_compute_description['queue'] = job_description['queue']
 
-        self.logger.debug("Queue: %s"%self.pilot_compute_description['queue'])
+        self.logger.debug("Queue: %s"%self.qtau_compute_description['queue'])
         
         # Defaults
-        self.pilot_compute_description['number_of_nodes'] = 1
-        self.pilot_compute_description['cores_per_node'] = 8
+        self.qtau_compute_description['number_of_nodes'] = 1
+        self.qtau_compute_description['cores_per_node'] = 8
 
-        self.pilot_compute_description.update(job_description)
+        self.qtau_compute_description.update(job_description)
 
-        self.pilot_compute_description['number_cores'] = self.pilot_compute_description['cores_per_node'] * self.pilot_compute_description['number_of_nodes']
+        self.qtau_compute_description['number_cores'] = self.qtau_compute_description['cores_per_node'] * self.qtau_compute_description['number_of_nodes']
 
 
 
         ### convert walltime in minutes to SLURM representation of time ###
         walltime_slurm = "01:00:00"
-        if "walltime" in self.pilot_compute_description:
-            hrs = math.floor(int(self.pilot_compute_description["walltime"]) / 60)
-            minu = int(self.pilot_compute_description["walltime"]) % 60
+        if "walltime" in self.qtau_compute_description:
+            hrs = math.floor(int(self.qtau_compute_description["walltime"]) / 60)
+            minu = int(self.qtau_compute_description["walltime"]) % 60
             walltime_slurm = "" + str(hrs) + ":" + str(minu) + ":00"
-        self.pilot_compute_description["walltime_slurm"] = walltime_slurm
+        self.qtau_compute_description["walltime_slurm"] = walltime_slurm
 
-        self.pilot_compute_description['output'] = os.path.join(
-                                                    self.pilot_compute_description['working_directory'],
+        self.qtau_compute_description['output'] = os.path.join(
+                                                    self.qtau_compute_description['working_directory'],
                                                     "%s.stdout"%self.job_uuid_short)
-        self.pilot_compute_description['error'] = os.path.join(self.pilot_compute_description['working_directory'], 
+        self.qtau_compute_description['error'] = os.path.join(self.qtau_compute_description['working_directory'], 
                                                                "%s.stderr"%self.job_uuid_short)
 
 
         # if 'qos' in job_description:
-        #     self.pilot_compute_description['qos'] = job_description['qos']
+        #     self.qtau_compute_description['qos'] = job_description['qos']
 
 
         # if 'project' in job_description:
-        #     self.pilot_compute_description['project'] = job_description['project']
+        #     self.qtau_compute_description['project'] = job_description['project']
 
         # if 'reservation' in job_description:
-        #     self.pilot_compute_description['reservation'] = job_description['reservation']
+        #     self.qtau_compute_description['reservation'] = job_description['reservation']
 
-        # self.pilot_compute_description['working_directory'] = os.getcwd()
+        # self.qtau_compute_description['working_directory'] = os.getcwd()
         # if 'working_directory' in job_description:
-        #     self.pilot_compute_description['working_directory'] = job_description['working_directory']
+        #     self.qtau_compute_description['working_directory'] = job_description['working_directory']
 
         
         # if 'output' in job_description:
-        #     self.pilot_compute_description['output'] = job_description['output']
+        #     self.qtau_compute_description['output'] = job_description['output']
 
         # if 'error' not in job_description:
-        #     self.pilot_compute_description['error'] = os.path.join(self.pilot_compute_description['working_directory'], "pq-%s.stderr"%self.job_uuid_short)
+        #     self.qtau_compute_description['error'] = os.path.join(self.qtau_compute_description['working_directory'], "pq-%s.stderr"%self.job_uuid_short)
 
         # if 'error' in job_description:
-        #     self.pilot_compute_description['error'] = job_description['error']
+        #     self.qtau_compute_description['error'] = job_description['error']
 
         # if 'walltime' in job_description:
-        #     self.pilot_compute_description['walltime'] = job_description['walltime']
+        #     self.qtau_compute_description['walltime'] = job_description['walltime']
 
 
         # #if 'number_cores' in job_description:
-        # #    self.pilot_compute_description['number_cores'] = job_description['number_cores']
+        # #    self.qtau_compute_description['number_cores'] = job_description['number_cores']
 
         
         # if 'cores_per_node' in job_description:
-        #     self.pilot_compute_description['cores_per_node'] = int(job_description['cores_per_node'])
+        #     self.qtau_compute_description['cores_per_node'] = int(job_description['cores_per_node'])
 
         
         # if 'number_of_nodes' in job_description:
-        #     self.pilot_compute_description['number_of_nodes'] = int(job_description['number_of_nodes'])
+        #     self.qtau_compute_description['number_of_nodes'] = int(job_description['number_of_nodes'])
 
         
-        # self.pilot_compute_description["scheduler_script_commands"] = \
+        # self.qtau_compute_description["scheduler_script_commands"] = \
         #     job_description.get("scheduler_script_commands", [])
 
     def run(self):
@@ -140,7 +140,7 @@ class Job(object):
         target_host = o.netloc
         start_command = ("ssh %s " % target_host)
         tmpf_name = ""
-        self.logger.debug("Submit pilot job to: " + str(self.resource_url))
+        self.logger.debug("Submit qtau job to: " + str(self.resource_url))
         self.logger.debug("Type Job ID" + str(self.job_uuid_short))
         try:
             fd, tmpf_name = tempfile.mkstemp()
@@ -148,36 +148,36 @@ class Job(object):
             print(tmpf_name)
             with os.fdopen(fd, 'w') as tmp:
                 tmp.write("#!/bin/bash\n")
-                # tmp.write("#SBATCH -n %s\n" % str(self.pilot_compute_description["number_cores"]))
-                tmp.write("#SBATCH -N %s\n" % str(self.pilot_compute_description["number_of_nodes"]))
+                # tmp.write("#SBATCH -n %s\n" % str(self.qtau_compute_description["number_cores"]))
+                tmp.write("#SBATCH -N %s\n" % str(self.qtau_compute_description["number_of_nodes"]))
                 tmp.write("#SBATCH -J %s\n" % self.job_uuid_short)
-                tmp.write("#SBATCH -t %s\n" % str(self.pilot_compute_description["walltime_slurm"]))
+                tmp.write("#SBATCH -t %s\n" % str(self.qtau_compute_description["walltime_slurm"]))
                 tmp.write("\n")
 
-                if "project" in self.pilot_compute_description and self.pilot_compute_description[
-                    "project"] != "None" and self.pilot_compute_description["project"] != None:
-                    tmp.write("#SBATCH -A %s\n" % str(self.pilot_compute_description["project"]))
+                if "project" in self.qtau_compute_description and self.qtau_compute_description[
+                    "project"] != "None" and self.qtau_compute_description["project"] != None:
+                    tmp.write("#SBATCH -A %s\n" % str(self.qtau_compute_description["project"]))
                 tmp.write("\n")
 
-                if "reservation" in self.pilot_compute_description and self.pilot_compute_description[
+                if "reservation" in self.qtau_compute_description and self.qtau_compute_description[
                     "reservation"] is not None:
-                    tmp.write("#SBATCH --reservation  %s\n" % str(self.pilot_compute_description["reservation"]))
+                    tmp.write("#SBATCH --reservation  %s\n" % str(self.qtau_compute_description["reservation"]))
                     tmp.write("\n")
-                tmp.write("#SBATCH -o %s\n" % self.pilot_compute_description["output"])
-                tmp.write("#SBATCH -e %s\n" % self.pilot_compute_description["error"])
-                if "queue" in self.pilot_compute_description and self.pilot_compute_description["queue"] != "None" and \
-                        self.pilot_compute_description["queue"] != None:
-                    tmp.write("#SBATCH -q %s\n" % self.pilot_compute_description["queue"])
-                if "qos" in self.pilot_compute_description:
-                    tmp.write("#SBATCH --qos %s\n" % self.pilot_compute_description["qos"])
+                tmp.write("#SBATCH -o %s\n" % self.qtau_compute_description["output"])
+                tmp.write("#SBATCH -e %s\n" % self.qtau_compute_description["error"])
+                if "queue" in self.qtau_compute_description and self.qtau_compute_description["queue"] != "None" and \
+                        self.qtau_compute_description["queue"] != None:
+                    tmp.write("#SBATCH -q %s\n" % self.qtau_compute_description["queue"])
+                if "qos" in self.qtau_compute_description:
+                    tmp.write("#SBATCH --qos %s\n" % self.qtau_compute_description["qos"])
 
-                for sc in self.pilot_compute_description["scheduler_script_commands"]:
+                for sc in self.qtau_compute_description["scheduler_script_commands"]:
                     tmp.write("%s\n" % sc)
                 
-                if "conda_environment" in self.pilot_compute_description:
-                    tmp.write("conda activate %s\n"%self.pilot_compute_description["conda_environment"])
+                if "conda_environment" in self.qtau_compute_description:
+                    tmp.write("conda activate %s\n"%self.qtau_compute_description["conda_environment"])
 
-                tmp.write("cd %s\n"%self.pilot_compute_description["working_directory"])
+                tmp.write("cd %s\n"%self.qtau_compute_description["working_directory"])
                 tmp.write("%s\n"%self.command)
                 tmp.flush()
 
@@ -199,7 +199,7 @@ class Job(object):
                                              stderr=subprocess.STDOUT,
                                              shell=True).decode("utf-8")
         except Exception as err:
-            self.logger.debug("Pilot SLURM job submission failed: %s" % err)
+            self.logger.debug("QTau SLURM job submission failed: %s" % err)
             raise err
 
         start_command = ("ssh %s " % target_host)
@@ -208,7 +208,7 @@ class Job(object):
         status = subprocess.call(start_command, shell=True)
         self.job_id = self.get_local_job_id(outstr)
         if self.job_id == None or self.job_id == "":
-            raise Exception("Pilot Submission via slurm+ssh:// failed")
+            raise Exception("QTau Submission via slurm+ssh:// failed")
 
     def get_id(self):
         return self.job_id

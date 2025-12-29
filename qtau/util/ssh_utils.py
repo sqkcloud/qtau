@@ -175,36 +175,36 @@ def execute_ssh_command_as_daemon(host, user=None, command="/bin/date", argument
 
 
 
-def install_pilot_quantum(hostname, pilot_compute_description):
+def install_qtau_quantum(hostname, qtau_compute_description):
     """
     Installs and bootstraps latest qtau and mini apps from github
     :param hostname:
     :return:
     """
 
-    # Pilot-quantum
+    # QTau-quantum
     start = time.time()
     command = "pip install --upgrade git+ssh://git@github.com/radical-cybertools/qtau.git"
     result = execute_ssh_command(hostname,
-                                 user=pilot_compute_description["os_ssh_username"],
+                                 user=qtau_compute_description["os_ssh_username"],
                                  command=command,
-                                 keyfile=pilot_compute_description["os_ssh_keyfile"])
+                                 keyfile=qtau_compute_description["os_ssh_keyfile"])
     print("Host: {} Command: {} Result: {} Time: {}".format(hostname, command, result, time.time()-start))
 
     # Dask Distributed
     start = time.time()
     command = "pip install --upgrade dask distributed"
     result = execute_ssh_command(hostname,
-                                 user=pilot_compute_description["os_ssh_username"],
+                                 user=qtau_compute_description["os_ssh_username"],
                                  command=command,
-                                 keyfile=pilot_compute_description["os_ssh_keyfile"])
+                                 keyfile=qtau_compute_description["os_ssh_keyfile"])
     print("Host: {} Command: {} Result: {} Time: {}".format(hostname, command, result, time.time() - start))
 
     # MINI Apps
     start = time.time()
     command = "pip install --upgrade git+ssh://git@github.com/radical-cybertools/quantum-miniapps.git"
     result = execute_ssh_command(hostname,
-                                 user=pilot_compute_description["os_ssh_username"],
+                                 user=qtau_compute_description["os_ssh_username"],
                                  command=command,
-                                 keyfile=pilot_compute_description["os_ssh_keyfile"])
+                                 keyfile=qtau_compute_description["os_ssh_keyfile"])
     print("Host: {} Command: {} Result: {} Time: {}".format(hostname, command, result, time.time()-start))

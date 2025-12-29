@@ -1,6 +1,6 @@
 import os
 
-from qtau.pilot_enums_exceptions import ExecutionEngine
+from qtau.qtau_enums_exceptions import ExecutionEngine
 print("PYTHONPATH:", os.getenv('PYTHONPATH'))
 import sys
 import socket
@@ -11,13 +11,13 @@ from scipy.optimize import minimize
 
 import ray
 import qtau
-from qtau.pilot_compute_service import PilotComputeService
+from qtau.qtau_compute_service import QTauComputeService
 
 RESOURCE_URL_HPC = "slurm://localhost"
 #WORKING_DIRECTORY = os.path.join(os.environ["HOME"], "work")
 WORKING_DIRECTORY = os.path.join(os.environ["PSCRATCH"], "work")
 
-pilot_compute_description_ray_cpu = {
+qtau_compute_description_ray_cpu = {
     "resource": RESOURCE_URL_HPC,
     "working_directory": WORKING_DIRECTORY,
     "number_of_nodes": 1,
@@ -31,7 +31,7 @@ pilot_compute_description_ray_cpu = {
     "scheduler_script_commands": ["#SBATCH --constraint=cpu"]
 }
 
-pilot_compute_description_ray_gpu = {
+qtau_compute_description_ray_gpu = {
     "resource": RESOURCE_URL_HPC,
     "working_directory": WORKING_DIRECTORY,
     "number_of_nodes": 1,
@@ -115,36 +115,36 @@ def f(x):
     return x * x    
 
 
-def start_pilot(pilot_compute_description):
-    pcs = PilotComputeService(execution_engine=ExecutionEngine.RAY, working_directory=WORKING_DIRECTORY)
-    dp = pcs.create_pilot(pilot_compute_description=pilot_compute_description)
-    print("waiting for Ray pilot to start")
+def start_qtau(qtau_compute_description):
+    pcs = QTauComputeService(execution_engine=ExecutionEngine.RAY, working_directory=WORKING_DIRECTORY)
+    dp = pcs.create_qtau(qtau_compute_description=qtau_compute_description)
+    print("waiting for Ray qtau to start")
     dp.wait()
     return dp
 
 
 if __name__ == "__main__":
 
-    ray_pilot, ray_client = None, None
+    ray_qtau, ray_client = None, None
 
     try:
-        # Start Pilot
-        ray_pilot = start_pilot(pilot_compute_description_ray_cpu)
+        # Start QTau
+        ray_qtau = start_qtau(qtau_compute_description_ray_cpu)
         
         # Get Dask client details
-        ray_client = ray_pilot.get_client()
+        ray_client = ray_qtau.get_client()
         
         with ray_client:
             print(ray.get([fit_circuit_to_target.remote() for i in range(10)]))
             print(ray.get([f.remote(i) for i in range(10)]))
             print(ray.get([run_circuit.remote() for i in range(10)]))
     
-        ray_pilot.cancel()
+        ray_qtau.cancel()
     except Exception as e:
         print("An error occurred: %s" % (str(e)))
     finally:
-        if ray_pilot:
-            ray_pilot.cancel()
+        if ray_qtau:
+            ray_qtau.cancel()
 
 
  
